@@ -1,7 +1,7 @@
 # module for reading and parsing RSS feeds
 import feedparser
 
-def get_rss(rss_url, headers, etag=None, modified=None):
+def get_rss(rss_url, etag=None, modified=None):
     """
     Read RSS feed.
 
@@ -12,7 +12,6 @@ def get_rss(rss_url, headers, etag=None, modified=None):
 
     feed = feedparser.parse(
         rss_url,
-        headers=headers,
         etag=etag,
         modified=modified
     )
@@ -38,7 +37,7 @@ def get_rss(rss_url, headers, etag=None, modified=None):
                 f"ViewFile/Agenda/_{month:02d}{day:02d}{year}-{id}?html=true"
             )
 
-            new_entries[id_parts[-2]] = {
+            new_entries[id] = {
                 "year": year,
                 "month": month,
                 "day": day,
@@ -53,5 +52,9 @@ def get_rss(rss_url, headers, etag=None, modified=None):
     print(f"No RSS feed found. Status: {feed.status}")
     return None, etag, modified
 
-def assign():
+def assign(url):
+  """
+  Scan meeting url for Agenda document.
+  Return agenda summary text, zoom call-info if present, urls for other documents
+  """
   pass
