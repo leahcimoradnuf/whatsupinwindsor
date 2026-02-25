@@ -1,3 +1,9 @@
 v0.0/
 test_data/
 data/
+.venv
+.venv-1
+__pycache__/
+.env
+.vscode
+tests/
