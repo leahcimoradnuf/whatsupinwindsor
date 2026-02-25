@@ -1,6 +1,7 @@
 # module for reading and parsing RSS feeds
 import feedparser
 
+#TODO there is no etag or last modified header, make this handle it with published parsed
 def get_rss(rss_url, etag=None, modified=None):
     """
     Read RSS feed.
