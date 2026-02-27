@@ -1,1 +1,0 @@
-#TODO define main functions that compile event data and summaries
