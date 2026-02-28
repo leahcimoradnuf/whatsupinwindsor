@@ -1,65 +1,71 @@
 # module for reading and parsing RSS feeds
+import json
+import os
 import feedparser
-from datetime import datetime
+from email.utils import parsedate_to_datetime
 
-#TODO get modified to pass into the function as a datetime.datetime type, not nonetype
-def get_rss(rss_url, modified=None): #, etag=None, modified=None):
-    """
-    Read RSS feed.
+STATE_FILE = "modified_state.json"
 
-    Returns:
-        (new_entries_dict, modified)
-        OR (None, modified) if 304
-    """
+def load_modified():
+    if not os.path.exists(STATE_FILE):
+        return None
+    
+    with open(STATE_FILE, "r") as f:
+        data = json.load(f)
+        return parsedate_to_datetime(data["modified"]).timetuple()
+    
+def save_modified(modified_struct):
+    from email.utils import format_datetime
+    from datetime import datetime
 
-    def parsedate(date_string):
-        """helper script for reading last-modified date"""
-        format_string = '%a, %d %b %Y %H:%M:%S GMT'
-        last_modified = datetime.strptime(date_string, format_string)
-        return last_modified
+    dt = datetime(*modified_struct[:6])
+    formatted = format_datetime(dt)
 
-    feed = feedparser.parse(rss_url)
+    with open(STATE_FILE, "w") as f:
+        json.dump({"modified": formatted}, f)
 
-    # --- Nothing new ---
+def get_rss(rss_url):
+    stored_modified = load_modified()
+
+    feed = feedparser.parse(rss_url, agent="Me.", modified=stored_modified)
+
     if feed.status == 304:
-        print("No new RSS entries")
-        return None, modified
+        print("No updates")
+        return {}
 
-    # --- New content ---
-    if feed.status == 200:
-        last_modified = parsedate(feed['headers']['last-modified'])
-        if not modified or modified and last_modified > modified:
-            new_entries = {}
+    if feed.status != 200:
+        raise Exception(f"Feed error: {feed.status}")
 
-            for entry in feed.entries:
-                id_parts = entry["id"].split("/")
-                id = id_parts[-2]
-                year = entry["published_parsed"][0]
-                month = entry["published_parsed"][1]
-                day = entry["published_parsed"][2]
+    # Persist new modified time
+    if feed.modified_parsed:
+        save_modified(feed.modified_parsed)
+    
+    # Parse the feed
+    print(f"Parsing new data")
+    new_entries = {}
 
-                url = (
-                    f"https://www.windsorct.gov/AgendaCenter/"
-                    f"ViewFile/Agenda/_{month:02d}{day:02d}{year}-{id}?html=true"
-                )
+    for entry in feed.entries:
+        id_parts = entry["id"].split("/")
+        id = id_parts[-2]
+        year = entry["published_parsed"][0]
+        month = entry["published_parsed"][1]
+        day = entry["published_parsed"][2]
 
-                new_entries[id] = {
-                    "year": year,
-                    "month": month,
-                    "day": day,
-                    "hour": entry["published_parsed"][3],
-                    "minute": entry["published_parsed"][4],
-                    "url": url
-                }
-            print(last_modified)
+        url = (
+            f"https://www.windsorct.gov/AgendaCenter/"
+            f"ViewFile/Agenda/_{month:02d}{day:02d}{year}-{id}?html=true"
+        )
 
-            return new_entries, last_modified
-        # else:
-            # print("No new RSS entries")
-
-    # --- Error case ---
-    print(f"No new RSS entries found. Status: {feed.status}")
-    return None
+        new_entries[id] = {
+            "year": year,
+            "month": month,
+            "day": day,
+            "hour": entry["published_parsed"][3],
+            "minute": entry["published_parsed"][4],
+            "url": url
+        }
+            
+    return new_entries
 
 def assign(url):
   """

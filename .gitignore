@@ -7,3 +7,4 @@ __pycache__/
 .env
 .vscode
 tests/
+modified_state.json
