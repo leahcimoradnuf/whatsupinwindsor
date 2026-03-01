@@ -1,0 +1,13 @@
+README.md
+pyproject.toml
+tests/test_rss.py
+wuiw/__init__.py
+wuiw/app.py
+wuiw/intake.py
+wuiw/main.py
+wuiw/reporter.py
+wuiw/writer.py
+wuiw.egg-info/PKG-INFO
+wuiw.egg-info/SOURCES.txt
+wuiw.egg-info/dependency_links.txt
+wuiw.egg-info/top_level.txt

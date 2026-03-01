@@ -1,0 +1,22 @@
+[project]
+name = "wuiw"
+version = "0.1.0"
+description = "WUIW project"
+readme = "README.md"
+requires-python = ">=3.10.12"
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["wuiw"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-ra --strict-markers"
+markers = [
+    "slow: marks tests as slow",
+    "integration: integration tests"
+]
