@@ -6,6 +6,9 @@ HEADERS = {
     "Accept": "application/rss+xml, application/xml;q=0.9, */*;q=0.8",
 }
 
+# Test Data
+RSS_URL="http://localhost:8000/town_council_rss.xml"
+
 # State files
 STATE_FILE = "modified_state.json"
 ASSIGNMENT_LIST = "assignments.json"
