@@ -3,6 +3,7 @@ import json
 import os
 import feedparser
 from email.utils import parsedate_to_datetime
+from wuiw.config import USER_AGENT
 
 STATE_FILE = "modified_state.json"
 
@@ -27,7 +28,7 @@ def save_modified(modified_struct):
 def get_rss(rss_url):
     stored_modified = load_modified()
 
-    feed = feedparser.parse(rss_url, agent="Me.", modified=stored_modified)
+    feed = feedparser.parse(rss_url, agent=USER_AGENT, modified=stored_modified)
 
     if feed.status == 304:
         print("No updates")
