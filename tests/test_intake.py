@@ -3,7 +3,7 @@
 import os
 from dotenv import load_dotenv
 from unittest.mock import patch, MagicMock
-from wuiw.intake import get_rss
+from wuiw.intake import get_rss, sort_assignments
 
 load_dotenv()
 def test_get_rss():
@@ -23,4 +23,11 @@ def test_get_rss_304_returns_empty():
 
     assert result == {}
     mock_save.assert_not_called()
+
+def test_sort_assignments():
+    os.remove("modified_state.json")
+    url = os.getenv("RSS_URL")
+    entries = get_rss(url)
+    sort_assignments(entries)
+    assert os.path.exists("assignments.json") == True
 

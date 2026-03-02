@@ -6,6 +6,7 @@ from email.utils import parsedate_to_datetime
 from wuiw.config import USER_AGENT
 
 STATE_FILE = "modified_state.json"
+ASSIGNMENT_LIST = "assignments.json"
 
 def load_modified():
     if not os.path.exists(STATE_FILE):
@@ -64,9 +65,40 @@ def get_rss(rss_url):
             "hour": entry["published_parsed"][3],
             "minute": entry["published_parsed"][4],
             "url": url
-        }
-            
+            }
+                    
     return new_entries
+
+def sort_assignments(entries):
+    """
+    Store new rss data to persistent json record
+    """
+    # Read existing data (handling the case where the file might not exist yet)
+    try:
+        with open(ASSIGNMENT_LIST, 'r') as f:
+            data = json.load(f)
+
+            if not isinstance(data, dict):
+                data = {}
+
+    except FileNotFoundError:
+        data = {}
+    
+    changed = False
+
+    # Merge / update only if different
+    for assignment_id, payload in entries.items():
+        if data.get(assignment_id) != payload:
+            data[assignment_id] = payload
+            changed = True
+
+    # Only write if something changed
+    if changed:
+        with open(ASSIGNMENT_LIST, "w") as f:
+            json.dump(data, f, indent=4)
+
+    return changed
+    
 
 def assign(url):
   """
