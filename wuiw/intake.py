@@ -3,10 +3,7 @@ import json
 import os
 import feedparser
 from email.utils import parsedate_to_datetime
-from wuiw.config import USER_AGENT
-
-STATE_FILE = "modified_state.json"
-ASSIGNMENT_LIST = "assignments.json"
+from wuiw.config import USER_AGENT, STATE_FILE, ASSIGNMENT_LIST
 
 def load_modified():
     if not os.path.exists(STATE_FILE):
