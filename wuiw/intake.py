@@ -128,16 +128,33 @@ def assign():
     new_assignments = []
 
     for assignment_id, payload in data.items():
-        if not payload.get("status", STATUS_PENDING):
+        if payload.get("status") == STATUS_PENDING:
             new_assignments.append((assignment_id, payload["url"]))
             data[assignment_id]["status"] = STATUS_ASSIGNED
             changed = True
         
-        if changed:
-            with open(ASSIGNMENT_LIST, "w") as f:
-                json.dump(data, f, indent=4)
+    if changed:
+        with open(ASSIGNMENT_LIST, "w") as f:
+            json.dump(data, f, indent=4)
 
     return new_assignments
 
-  
+def update_status(assignment_id, status, error_message=None):
+    """use in main() to manage assignment state"""
+    try:
+        with open(ASSIGNMENT_LIST, 'r') as f:
+            data = json.load(f)
+    except FileNotFoundError:
+        return False
 
+    if assignment_id not in data:
+        return False
+
+    data[assignment_id]["status"] = status
+    if error_message:
+        data[assignment_id]["error_message"] = error_message
+
+    with open(ASSIGNMENT_LIST, 'w') as f:
+        json.dump(data, f, indent=4)
+
+    return True

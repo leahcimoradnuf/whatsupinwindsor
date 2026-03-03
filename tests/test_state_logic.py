@@ -5,8 +5,8 @@ import time
 import json
 
 from unittest.mock import patch, MagicMock
-from wuiw.intake import get_rss, sort_assignments
-from wuiw.config import STATE_FILE, ASSIGNMENT_LIST, RSS_URL, USER_AGENT, STATUS_PENDING
+from wuiw.intake import get_rss, sort_assignments, assign
+from wuiw.config import STATE_FILE, ASSIGNMENT_LIST, RSS_URL, USER_AGENT, STATUS_PENDING, STATUS_ASSIGNED
 
 
 def test_304_no_changes():
@@ -173,8 +173,6 @@ def test_idempotent_double_run(tmp_path, monkeypatch):
     changed_fourth = sort_assignments(updated)
     assert changed_fourth is True
 
-    # TODO add assign() here to change assigned states in temp_file to True for this test
-
     with open(temp_file, "r") as f:
         data_after_fourth = json.load(f)
 
@@ -182,3 +180,57 @@ def test_idempotent_double_run(tmp_path, monkeypatch):
     assert data_after_fourth["123"]["url"] == "http://changed.com"
     # new data should change assignement state to False
     assert data_after_fourth["123"]["status"] == STATUS_PENDING
+
+def test_assignment_state_handler(tmp_path, monkeypatch):
+    """test assign() interaction with assignments file"""
+    # set temporary file
+    temp_file = tmp_path / "assignments.json"
+    # Patch ASSIGNMENT_LIST to use temp file
+    monkeypatch.setattr("wuiw.intake.ASSIGNMENT_LIST", str(temp_file))
+
+    sample_entries = {
+        "123": {
+            "year": 2025,
+            "month": 3,
+            "day": 1,
+            "hour": 10,
+            "minute": 30,
+            "url": "http://example.com",
+            "status": STATUS_PENDING
+        },
+        "456": {
+            "year": 2025,
+            "month": 3,
+            "day": 18,
+            "hour": 10,
+            "minute": 450,
+            "url": "http://example2.com"
+        }
+    }
+
+    # write initial file
+    sort_assignments(sample_entries)
+
+    with open(temp_file, "r") as f:
+        data_after_first = json.load(f)
+
+    # initial data state should be pending
+    assert data_after_first["123"]["status"] == STATUS_PENDING
+    assert data_after_first["456"]["status"] == STATUS_PENDING
+
+    tasks = assign()
+
+    assert isinstance(tasks, list) # task should be a list of tuples
+    assert isinstance(tasks[0], tuple) # each entry should be a tuple
+
+    # read assignments file, status should now be assigned
+    with open(temp_file, "r") as f:
+        data_after_assigned = json.load(f)
+
+    assert data_after_assigned["123"]["status"] == STATUS_ASSIGNED
+    assert data_after_assigned["456"]["status"] == STATUS_ASSIGNED
+
+    # read assignments file once more, no changes, assign returns an empty list
+    no_new_tasks = assign()
+
+    assert no_new_tasks == []
