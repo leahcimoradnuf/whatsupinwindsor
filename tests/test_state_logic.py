@@ -6,7 +6,7 @@ import json
 
 from unittest.mock import patch, MagicMock
 from wuiw.intake import get_rss, sort_assignments, assign
-from wuiw.config import STATE_FILE, ASSIGNMENT_LIST, RSS_URL, USER_AGENT, STATUS_PENDING, STATUS_ASSIGNED
+from wuiw.config import STATE_FILE, ASSIGNMENT_LIST, RSS_URL, USER_AGENT, STATUS_PENDING, STATUS_ASSIGNED, STATUS_COMPLETE, STATUS_FAILED
 
 
 def test_304_no_changes():
@@ -188,7 +188,7 @@ def test_assignment_state_handler(tmp_path, monkeypatch):
     # Patch ASSIGNMENT_LIST to use temp file
     monkeypatch.setattr("wuiw.intake.ASSIGNMENT_LIST", str(temp_file))
 
-    sample_entries = {
+    initial_data = {
         "123": {
             "year": 2025,
             "month": 3,
@@ -203,25 +203,50 @@ def test_assignment_state_handler(tmp_path, monkeypatch):
             "month": 3,
             "day": 18,
             "hour": 10,
-            "minute": 450,
-            "url": "http://example2.com"
+            "minute": 45,
+            "url": "http://example2.com",
+            "status": STATUS_PENDING
+        },
+        "789": {
+            "year": 2025,
+            "month": 2,
+            "day": 18,
+            "hour": 1,
+            "minute": 45,
+            "url": "http://example3.com",
+            "status": STATUS_ASSIGNED
+        },
+        "101": {
+            "year": 2025,
+            "month": 1,
+            "day": 11,
+            "hour": 3,
+            "minute": 30,
+            "url": "http://example4.com",
+            "status": STATUS_COMPLETE
+        },
+        "000": {
+            "year": 2025,
+            "month": 1,
+            "day": 30,
+            "hour": 11,
+            "minute": 12,
+            "url": "http://example5.com",
+            "status": STATUS_FAILED
         }
     }
 
     # write initial file
-    sort_assignments(sample_entries)
-
-    with open(temp_file, "r") as f:
-        data_after_first = json.load(f)
-
-    # initial data state should be pending
-    assert data_after_first["123"]["status"] == STATUS_PENDING
-    assert data_after_first["456"]["status"] == STATUS_PENDING
+    with open(temp_file, "w") as f:
+        json.dump(initial_data, f)
 
     tasks = assign()
 
+    assert len(tasks) == 2
     assert isinstance(tasks, list) # task should be a list of tuples
     assert isinstance(tasks[0], tuple) # each entry should be a tuple
+    assert ("123", "http://example.com") in tasks
+    assert ("456", "http://example2.com") in tasks
 
     # read assignments file, status should now be assigned
     with open(temp_file, "r") as f:
