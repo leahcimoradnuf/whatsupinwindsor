@@ -6,7 +6,7 @@ import json
 
 from unittest.mock import patch, MagicMock
 from wuiw.intake import get_rss, sort_assignments
-from wuiw.config import STATE_FILE, ASSIGNMENT_LIST, RSS_URL, USER_AGENT
+from wuiw.config import STATE_FILE, ASSIGNMENT_LIST, RSS_URL, USER_AGENT, STATUS_PENDING
 
 
 def test_304_no_changes():
@@ -110,7 +110,8 @@ def test_idempotent_double_run(tmp_path, monkeypatch):
             "day": 1,
             "hour": 10,
             "minute": 30,
-            "url": "http://example.com"
+            "url": "http://example.com",
+            "status": STATUS_PENDING
         },
         "456": {
             "year": 2025,
@@ -165,13 +166,19 @@ def test_idempotent_double_run(tmp_path, monkeypatch):
 
     # Confirm the first entry is still the same
     assert data_after_third["123"] == data_after_second["123"]
+    # second entry (new) assignment stat should be false
+    assert data_after_third["456"]["status"] == STATUS_PENDING
 
-    # Confirm new data for same ID overwrites and doesnt append
-    changed_update = sort_assignments(updated)
-    assert changed_update is True
+    # Fourth run --> new data for same ID overwrites and doesnt append
+    changed_fourth = sort_assignments(updated)
+    assert changed_fourth is True
+
+    # TODO add assign() here to change assigned states in temp_file to True for this test
 
     with open(temp_file, "r") as f:
-        data_after_overwrite = json.load(f)
+        data_after_fourth = json.load(f)
 
-    assert len(data_after_overwrite) == 2
-    assert data_after_overwrite["123"]["url"] == "http://changed.com"
+    assert len(data_after_fourth) == 2
+    assert data_after_fourth["123"]["url"] == "http://changed.com"
+    # new data should change assignement state to False
+    assert data_after_fourth["123"]["status"] == STATUS_PENDING

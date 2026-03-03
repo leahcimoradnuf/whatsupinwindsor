@@ -9,6 +9,10 @@ HEADERS = {
 # Test Data
 RSS_URL="http://localhost:8000/town_council_rss.xml"
 
-# State files
+# State machine
 STATE_FILE = "modified_state.json"
 ASSIGNMENT_LIST = "assignments.json"
+STATUS_PENDING = "pending"
+STATUS_ASSIGNED = "assigned"
+STATUS_COMPLETE = "complete"
+STATUS_FAILED = "failed"

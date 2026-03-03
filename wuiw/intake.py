@@ -3,7 +3,7 @@ import json
 import os
 import feedparser
 from email.utils import parsedate_to_datetime
-from wuiw.config import USER_AGENT, STATE_FILE, ASSIGNMENT_LIST
+from wuiw.config import USER_AGENT, STATE_FILE, ASSIGNMENT_LIST, STATUS_PENDING, STATUS_ASSIGNED
 
 def load_modified():
     if not os.path.exists(STATE_FILE):
@@ -83,13 +83,26 @@ def sort_assignments(entries):
     
     changed = False
 
-    # Merge / update only if different
+    # Merge / update only if different, manage assigned tag
     for assignment_id, payload in entries.items():
-        if data.get(assignment_id) != payload:
-            data[assignment_id] = payload
-            changed = True
+
+        existing = data.get(assignment_id)
+
+        payload_copy = payload.copy()
+
+        if existing:
+            existing_content = {k: v for k, v in existing.items() if k != "status"}
+
+            if existing_content == payload:
+                continue  # nothing changed
+
+        # If we get here, either new OR changed
+        payload_copy["status"] = STATUS_PENDING
+        data[assignment_id] = payload_copy
+        changed = True
 
     # Only write if something changed
+    # TODO replace with update status helper
     if changed:
         with open(ASSIGNMENT_LIST, "w") as f:
             json.dump(data, f, indent=4)
@@ -97,9 +110,34 @@ def sort_assignments(entries):
     return changed
     
 
-def assign(url):
-  """
-  Scan meeting url for Agenda document.
-  Return agenda summary text, zoom call-info if present, urls for other documents
-  """
-  pass
+def assign():
+    """
+    push unassigned url's to reporter .py and manage state in ASSIGNMENT_LIST
+    """
+    try:
+        with open(ASSIGNMENT_LIST, 'r') as f:
+            data = json.load(f)
+
+            if not isinstance(data, dict):
+                data = {}
+    except FileNotFoundError:
+        data = {}
+    
+    changed = False
+
+    new_assignments = []
+
+    for assignment_id, payload in data.items():
+        if not payload.get("status", STATUS_PENDING):
+            new_assignments.append((assignment_id, payload["url"]))
+            data[assignment_id]["status"] = STATUS_ASSIGNED
+            changed = True
+        
+        if changed:
+            with open(ASSIGNMENT_LIST, "w") as f:
+                json.dump(data, f, indent=4)
+
+    return new_assignments
+
+  
+
