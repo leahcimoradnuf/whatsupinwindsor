@@ -9,6 +9,10 @@ HEADERS = {
 # Test Data
 RSS_URL="http://localhost:8000/town_council_rss.xml"
 
+# Classification Data
+MUNICIPAL_BODIES = ["Town Council", "Planning Commission", "Board of Education"]
+DOCUMENT_TYPES = ["Agenda", "Minutes", "Votes"]
+
 # State machine
 STATE_FILE = "modified_state.json"
 ASSIGNMENT_LIST = "assignments.json"

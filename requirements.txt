@@ -11,8 +11,12 @@ packaging==26.0
 pluggy==1.6.0
 Pygments==2.19.2
 pytest==9.0.2
+pytest-html==4.2.0
+pytest-metadata==3.1.1
 python-dotenv==1.2.1
+RapidFuzz==3.14.3
 sgmllib3k==1.0.0
 tomli==2.4.0
 typing_extensions==4.15.0
 Werkzeug==3.1.6
+-e git+https://github.com/leahcimoradnuf/whatsupinwindsor.git@6bd0f3f475bc639284e4abe6b9303dce0a5edbee#egg=wuiw

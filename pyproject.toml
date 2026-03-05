@@ -15,7 +15,7 @@ packages = ["wuiw"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
-addopts = "-v -ra --strict-markers"
+addopts = "-vv -ra --strict-markers"
 markers = [
     "slow: marks tests as slow",
     "integration: integration tests"
