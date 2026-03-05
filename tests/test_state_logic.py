@@ -5,7 +5,7 @@ import time
 import json
 
 from unittest.mock import patch, MagicMock
-from wuiw.intake import get_rss, sort_assignments, assign
+from wuiw.intake import get_rss, sort_assignments, assign, update_status
 from wuiw.config import STATE_FILE, ASSIGNMENT_LIST, RSS_URL, USER_AGENT, STATUS_PENDING, STATUS_ASSIGNED, STATUS_COMPLETE, STATUS_FAILED
 
 
@@ -259,3 +259,6 @@ def test_assignment_state_handler(tmp_path, monkeypatch):
     no_new_tasks = assign()
 
     assert no_new_tasks == []
+
+def test_update_status_helper(tmp_path, monkeypatch):
+    pass

@@ -2,8 +2,11 @@
 import json
 import os
 import feedparser
+import logging
 from email.utils import parsedate_to_datetime
 from wuiw.config import USER_AGENT, STATE_FILE, ASSIGNMENT_LIST, STATUS_PENDING, STATUS_ASSIGNED
+
+logger = logging.getLogger(__name__)
 
 def load_modified():
     if not os.path.exists(STATE_FILE):
@@ -29,7 +32,7 @@ def get_rss(rss_url):
     feed = feedparser.parse(rss_url, agent=USER_AGENT, modified=stored_modified)
 
     if feed.status == 304:
-        print("No updates")
+        logger.info(f"STATUS: {feed.status}; No updates")
         return {}
 
     if feed.status != 200:
@@ -40,29 +43,33 @@ def get_rss(rss_url):
         save_modified(feed.modified_parsed)
     
     # Parse the feed
-    print(f"Parsing new data")
+    logger.info(f"STATUS: {feed.status}; Parsing new data")
     new_entries = {}
 
     for entry in feed.entries:
-        id_parts = entry["id"].split("/")
-        id = id_parts[-2]
-        year = entry["published_parsed"][0]
-        month = entry["published_parsed"][1]
-        day = entry["published_parsed"][2]
+        try:
+            id_parts = entry["id"].split("/")
+            id = id_parts[-2]
+            year = entry["published_parsed"][0]
+            month = entry["published_parsed"][1]
+            day = entry["published_parsed"][2]
 
-        url = (
-            f"https://www.windsorct.gov/AgendaCenter/"
-            f"ViewFile/Agenda/_{month:02d}{day:02d}{year}-{id}?html=true"
-        )
+            url = (
+                f"https://www.windsorct.gov/AgendaCenter/"
+                f"ViewFile/Agenda/_{month:02d}{day:02d}{year}-{id}?html=true"
+            )
 
-        new_entries[id] = {
-            "year": year,
-            "month": month,
-            "day": day,
-            "hour": entry["published_parsed"][3],
-            "minute": entry["published_parsed"][4],
-            "url": url
-            }
+            new_entries[id] = {
+                "year": year,
+                "month": month,
+                "day": day,
+                "hour": entry["published_parsed"][3],
+                "minute": entry["published_parsed"][4],
+                "url": url
+                }
+        except KeyError as e:
+            logger.warning(f"bad entry; {e}")
+            continue
                     
     return new_entries
 
@@ -102,7 +109,6 @@ def sort_assignments(entries):
         changed = True
 
     # Only write if something changed
-    # TODO replace with update status helper
     if changed:
         with open(ASSIGNMENT_LIST, "w") as f:
             json.dump(data, f, indent=4)
