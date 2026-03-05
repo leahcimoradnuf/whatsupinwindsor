@@ -5,6 +5,7 @@ import feedparser
 import logging
 from email.utils import parsedate_to_datetime
 from wuiw.config import USER_AGENT, STATE_FILE, ASSIGNMENT_LIST, STATUS_PENDING, STATUS_ASSIGNED
+from rapidfuzz import process
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +26,13 @@ def save_modified(modified_struct):
 
     with open(STATE_FILE, "w") as f:
         json.dump({"modified": formatted}, f)
+
+def classify(title, classifications, threshold=80):
+    match, score, _ = process.extractOne(title, classifications)
+    if score >= threshold:
+        return match
+    logger.warning("Could not classify body from title: %s", title)
+    return None
 
 def get_rss(rss_url):
     stored_modified = load_modified()
