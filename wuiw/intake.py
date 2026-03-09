@@ -48,7 +48,7 @@ def get_rss(rss_url):
         raise Exception("Feed error: %s", feed.status)
 
     # Persist new modified time
-    if feed.modified_parsed:
+    if getattr(feed, "modified_parsed", None):
         save_modified(feed.modified_parsed)
     
     # Parse the feed
