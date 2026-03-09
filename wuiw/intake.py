@@ -3,8 +3,9 @@ import json
 import os
 import feedparser
 import logging
+import datetime
 from email.utils import parsedate_to_datetime
-from wuiw.config import USER_AGENT, STATE_FILE, ASSIGNMENT_LIST, STATUS_PENDING, STATUS_ASSIGNED
+from wuiw.config import USER_AGENT, STATE_FILE, ASSIGNMENT_LIST, STATUS_PENDING, STATUS_ASSIGNED, MUNICIPAL_BODIES
 from rapidfuzz import process
 
 logger = logging.getLogger(__name__)
@@ -32,7 +33,7 @@ def classify(title, classifications, threshold=80):
     if score >= threshold:
         return match
     logger.warning("Could not classify body from title: %s", title)
-    return None
+    return "Not Classified"
 
 def get_rss(rss_url):
     stored_modified = load_modified()
@@ -53,30 +54,34 @@ def get_rss(rss_url):
     # Parse the feed
     logger.info(f"STATUS: {feed.status}; Parsing new data")
     new_entries = {}
-
     for entry in feed.entries:
-        try:
+        print(entry.keys())
+        try:    
             id_parts = entry["id"].split("/")
-            id = id_parts[-2]
+            meeting_id = id_parts[-2]
+            title = entry["title"]
+            body = classify(title, MUNICIPAL_BODIES)
+            body = "_".join(body.lower().split())
             year = entry["published_parsed"][0]
             month = entry["published_parsed"][1]
             day = entry["published_parsed"][2]
+            pub_date = datetime.date(year, month, day).isoformat()
 
+            composite_id = f"{body}_{meeting_id}_{year}"
             url = (
                 f"https://www.windsorct.gov/AgendaCenter/"
-                f"ViewFile/Agenda/_{month:02d}{day:02d}{year}-{id}?html=true"
+                f"ViewFile/Agenda/_{month:02d}{day:02d}{year}-{meeting_id}?html=true"
             )
 
-            new_entries[id] = {
-                "year": year,
-                "month": month,
-                "day": day,
-                "hour": entry["published_parsed"][3],
-                "minute": entry["published_parsed"][4],
-                "url": url
+            new_entries[composite_id] = {
+                "meeting_id": meeting_id,
+                "body": body,
+                "published_date": pub_date,
+                "materials": url
                 }
+
         except KeyError as e:
-            logger.warning(f"bad entry; {e}")
+            logger.warning(f"bad entry: {e}")
             continue
                     
     return new_entries

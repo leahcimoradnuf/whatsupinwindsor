@@ -7,7 +7,7 @@ HEADERS = {
 }
 
 # Test Data
-RSS_URL="http://localhost:8000/town_council_rss.xml"
+RSS_CURL="http://localhost:8000/town_council_rss.xml"
 
 # Classification Data
 MUNICIPAL_BODIES = ["Town Council", "Planning Commission", "Board of Education"]
