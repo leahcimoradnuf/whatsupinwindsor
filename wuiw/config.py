@@ -6,6 +6,9 @@ HEADERS = {
     "Accept": "application/rss+xml, application/xml;q=0.9, */*;q=0.8",
 }
 
+# Scraper Target
+RSS_CURL="https://www.windsorct.gov/RSSFeed.aspx?ModID=65&CID=All-0"
+
 # Test Data
 RSS_CURL="http://localhost:8000/town_council_rss.xml"
 
