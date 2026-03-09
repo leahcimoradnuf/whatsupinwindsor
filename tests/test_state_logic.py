@@ -196,7 +196,7 @@ def test_assignment_state_handler(tmp_path, monkeypatch):
             "day": 1,
             "hour": 10,
             "minute": 30,
-            "url": "http://example.com",
+            "materials": "http://example.com",
             "status": STATUS_PENDING
         },
         "456": {
@@ -205,7 +205,7 @@ def test_assignment_state_handler(tmp_path, monkeypatch):
             "day": 18,
             "hour": 10,
             "minute": 45,
-            "url": "http://example2.com",
+            "materials": "http://example2.com",
             "status": STATUS_PENDING
         },
         "789": {
@@ -214,7 +214,7 @@ def test_assignment_state_handler(tmp_path, monkeypatch):
             "day": 18,
             "hour": 1,
             "minute": 45,
-            "url": "http://example3.com",
+            "materials": "http://example3.com",
             "status": STATUS_ASSIGNED
         },
         "101": {
@@ -223,7 +223,7 @@ def test_assignment_state_handler(tmp_path, monkeypatch):
             "day": 11,
             "hour": 3,
             "minute": 30,
-            "url": "http://example4.com",
+            "materials": "http://example4.com",
             "status": STATUS_COMPLETE
         },
         "000": {
@@ -232,7 +232,7 @@ def test_assignment_state_handler(tmp_path, monkeypatch):
             "day": 30,
             "hour": 11,
             "minute": 12,
-            "url": "http://example5.com",
+            "materials": "http://example5.com",
             "status": STATUS_FAILED
         }
     }
@@ -274,7 +274,7 @@ def test_update_status_helper(tmp_path, monkeypatch):
             "day": 1,
             "hour": 10,
             "minute": 30,
-            "url": "http://example.com",
+            "materials": "http://example.com",
             "status": STATUS_ASSIGNED
         }
     }
@@ -289,4 +289,30 @@ def test_update_status_helper(tmp_path, monkeypatch):
         data_after_updated = json.load(f)
 
     assert data_after_updated["123"]["status"] == "complete"
+
+# INTEGRATION TESTS
+
+def test_sort_then_assign(tmp_path, monkeypatch):
+    # set temporary file
+    temp_file = tmp_path / "assignments.json"
+    # Patch ASSIGNMENT_LIST to use temp file
+    monkeypatch.setattr("wuiw.intake.ASSIGNMENT_LIST", str(temp_file))
+
+    sample_entries = {
+        "123": {
+            "meeting_id": "123",
+            "body": "town_council",
+            "published_date": "2025-03-01",
+            "materials": "http://example.com"
+        }
+    }
+
+    sort_assignments(sample_entries)
+    tasks = assign()
+
+    with open(temp_file, 'r') as f:
+        data = json.load(f)
+
+    assert data["123"]["status"] == STATUS_ASSIGNED
+    assert ("123", "http://example.com") in tasks
 
