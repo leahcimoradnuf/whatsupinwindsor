@@ -262,4 +262,31 @@ def test_assignment_state_handler(tmp_path, monkeypatch):
     assert no_new_tasks == []
 
 def test_update_status_helper(tmp_path, monkeypatch):
-    pass
+    # set temporary file
+    temp_file = tmp_path / "assignments.json"
+    # Patch ASSIGNMENT_LIST to use temp file
+    monkeypatch.setattr("wuiw.intake.ASSIGNMENT_LIST", str(temp_file))
+
+    initial_data = {
+        "123": {
+            "year": 2025,
+            "month": 3,
+            "day": 1,
+            "hour": 10,
+            "minute": 30,
+            "url": "http://example.com",
+            "status": STATUS_ASSIGNED
+        }
+    }
+
+    # write initial file
+    with open(temp_file, "w") as f:
+        json.dump(initial_data, f)
+    
+    update_status("123", STATUS_COMPLETE)
+
+    with open(temp_file, "r") as f:
+        data_after_updated = json.load(f)
+
+    assert data_after_updated["123"]["status"] == "complete"
+
