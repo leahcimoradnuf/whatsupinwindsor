@@ -7,7 +7,7 @@ HEADERS = {
 }
 
 # Scraper Target
-RSS_CURL="https://www.windsorct.gov/RSSFeed.aspx?ModID=65&CID=All-0"
+RSS_URL="https://www.windsorct.gov/RSSFeed.aspx?ModID=65&CID=All-0"
 
 # Test Data
 RSS_CURL="http://localhost:8000/town_council_rss.xml"

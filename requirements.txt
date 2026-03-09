@@ -19,4 +19,4 @@ sgmllib3k==1.0.0
 tomli==2.4.0
 typing_extensions==4.15.0
 Werkzeug==3.1.6
--e git+https://github.com/leahcimoradnuf/whatsupinwindsor.git@6bd0f3f475bc639284e4abe6b9303dce0a5edbee#egg=wuiw
+-e git+https://github.com/leahcimoradnuf/whatsupinwindsor.git@a29446ff89177eeb79a619e8d5fff6e03cfc25a0#egg=wuiw
