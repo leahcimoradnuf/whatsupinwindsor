@@ -5,7 +5,7 @@ import feedparser
 import logging
 import datetime
 from email.utils import parsedate_to_datetime
-from wuiw.config import USER_AGENT, STATE_FILE, ASSIGNMENT_LIST, STATUS_PENDING, STATUS_ASSIGNED, MUNICIPAL_BODIES
+from wuiw.config import USER_AGENT, STATE_FILE, ASSIGNMENT_LIST, STATUS_PENDING, STATUS_ASSIGNED, MUNICIPAL_BODIES, STATUS_FAILED
 from rapidfuzz import process
 
 logger = logging.getLogger(__name__)
@@ -146,14 +146,23 @@ def assign():
 
     for assignment_id, payload in data.items():
         if payload.get("status") == STATUS_PENDING:
-            new_assignments.append((assignment_id, payload["url"]))
+            try:
+                new_assignments.append((assignment_id, payload["materials"]))
+            except KeyError as e:
+                logger.warning("Material packet for %s not found.", assignment_id)
+                data[assignment_id]["status"] = STATUS_FAILED
+                data[assignment_id]["error_message"] = str(e)
+                continue
             data[assignment_id]["status"] = STATUS_ASSIGNED
+            logger.info("Assigning task: %s", assignment_id)
             changed = True
         
     if changed:
+        logger.info("Changing status in ASSIGNMENT_LIST at:\n%s", ASSIGNMENT_LIST)
         with open(ASSIGNMENT_LIST, "w") as f:
             json.dump(data, f, indent=4)
 
+    logger.info("Sending assignments to reporter.")
     return new_assignments
 
 def update_status(assignment_id, status, error_message=None):
