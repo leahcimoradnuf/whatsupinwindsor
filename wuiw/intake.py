@@ -41,21 +41,20 @@ def get_rss(rss_url):
     feed = feedparser.parse(rss_url, agent=USER_AGENT, modified=stored_modified)
 
     if feed.status == 304:
-        logger.info(f"STATUS: {feed.status}; No updates")
+        logger.info("STATUS: %s; No updates", feed.status)
         return {}
 
     if feed.status != 200:
-        raise Exception(f"Feed error: {feed.status}")
+        raise Exception("Feed error: %s", feed.status)
 
     # Persist new modified time
     if feed.modified_parsed:
         save_modified(feed.modified_parsed)
     
     # Parse the feed
-    logger.info(f"STATUS: {feed.status}; Parsing new data")
+    logger.info("STATUS: %s; Parsing new data", feed.status)
     new_entries = {}
     for entry in feed.entries:
-        print(entry.keys())
         try:    
             id_parts = entry["id"].split("/")
             meeting_id = id_parts[-2]
@@ -81,7 +80,7 @@ def get_rss(rss_url):
                 }
 
         except KeyError as e:
-            logger.warning(f"bad entry: {e}")
+            logger.warning("bad entry: %s", e)
             continue
                     
     return new_entries
@@ -128,7 +127,6 @@ def sort_assignments(entries):
 
     return changed
     
-
 def assign():
     """
     push unassigned url's to reporter .py and manage state in ASSIGNMENT_LIST
