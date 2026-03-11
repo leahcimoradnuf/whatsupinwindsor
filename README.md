@@ -5,9 +5,15 @@ A simple-as-can be flask app for tracking, summarizing, and reporting on officia
 
 Architecture 
 ============
-
-- app.py - the front-end flask app, - queries database
-- main.py - the backend routine for aggregating info, runs on cronjob, writes to database
-- reporter.py - module that interfaces with 3rd party zoom recording bot (recall.ai)
-- intake.py - module that retrieves new data from the town's RSS feed
-- writer.py - module that interfaces with OpenAI api to use text summarization models
+```text
+wuiw/
+├── main.py          # Orchestration — runs the pipeline, calls everything else
+├── intake.py        # Outside → system — RSS ingestion, assignment state management
+# Management
+├── editor.py        # System → system — audits assignments, routes updates, admin data ops
+# Data Ops
+├── reporter.py      # System → outside — fetches document content when assigned
+├── writer.py        # Content → summaries + extracted metadata (AI API)
+├── app.py           # HTTP interface — Flask routes only, no business logic
+└── config.py        # Constants, environment variables, shared configuration
+```
