@@ -17,3 +17,11 @@ wuiw/
 ├── app.py           # HTTP interface — Flask routes only, no business logic
 └── config.py        # Constants, environment variables, shared configuration
 ```
+Pipeline
+--------
+```text
+main.py
+  → editor.get_assignments()         # returns list of assignment packets
+  → writer.write_article()           # for each assignment, returns article dict
+  → editor.publish_article()         # persists to storage
+```
