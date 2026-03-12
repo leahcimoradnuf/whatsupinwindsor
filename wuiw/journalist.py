@@ -27,10 +27,16 @@ MINUTES_FEW_SHOTS = [
         """
     },{
         "role": "user",
-        "content": EXAMPLE_MINUTES
+        "content": EXAMPLE_MINUTES[0]
     },{
         "role": "assistant",
-        "content": json.dumps({"meeting_date": EXAMPLE_MEETING_DATE, "headline": EXAMPLE_HEADLINE, "bullets": EXAMPLE_BULLETS,"blurb": EXAMPLE_BLURB})
+        "content": json.dumps({"meeting_date": EXAMPLE_MEETING_DATE[0], "headline": EXAMPLE_HEADLINE[0], "bullets": EXAMPLE_BULLETS[0],"blurb": EXAMPLE_BLURB[0]})
+    },{
+        "role": "user",
+        "content": EXAMPLE_MINUTES[1]
+    },{
+        "role": "assistant",
+        "content": json.dumps({"meeting_date": EXAMPLE_MEETING_DATE[1], "headline": EXAMPLE_HEADLINE[1], "bullets": EXAMPLE_BULLETS[1],"blurb": EXAMPLE_BLURB[1]})
     }
 ]
 AGENDA_FEW_SHOTS = ""

@@ -9,3 +9,4 @@ __pycache__/
 *.json
 scratch_nb/
 reports/
+*.ipynb
