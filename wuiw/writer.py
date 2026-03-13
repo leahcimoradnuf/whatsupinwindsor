@@ -1,12 +1,9 @@
 # Module for writing content using AI Authors
 import logging
 from datetime import datetime
-from wuiw.config import PROVIDER, STATUS_FAILED, STATUS_COMPLETE
+from wuiw.config import get_provider, STATUS_FAILED, STATUS_COMPLETE
 
 logger = logging.getLogger(__name__)
-
-# Read LLM API Provider from config
-provider = PROVIDER
 
 REQUIRED_KEYS = ["meeting_date", "headline", "bullets", "blurb"]
 
@@ -55,6 +52,7 @@ def review_article(draft):
 def write_article(meeting_id, text, doc_type, chunked=False):
     # TODO recieve_assignment and chunking goes here
     # TODO try logic here for exception handling
+    provider = get_provider()
     draft = provider.summarize(text, doc_type)
     article, status, error = review_article(draft)
     
