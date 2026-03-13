@@ -1,3 +1,5 @@
+
+
 # HTTP header info
 USER_AGENT = "WUIW/0.1 (+https://app.whatsupinwindsor.com; contact: mike@whatsupinwindsor.com)"
 
@@ -23,3 +25,12 @@ STATUS_PENDING = "pending"
 STATUS_ASSIGNED = "assigned"
 STATUS_COMPLETE = "complete"
 STATUS_FAILED = "failed"
+
+# Journalists
+_provider = None
+def get_provider():
+    global _provider
+    if _provider is None:
+        from wuiw.journalist import OpenAIProvider
+        _provider = OpenAIProvider()
+    return _provider
