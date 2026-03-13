@@ -7,11 +7,12 @@ from wuiw.config_prompts import EXAMPLE_MINUTES, EXAMPLE_HEADLINE, EXAMPLE_BULLE
 
 logger = logging.getLogger(__name__)
 
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 [REDACTED]
 
 class OpenAIProvider:
     def __init__(self):
-        self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        self.client = OpenAI(api_key=OPENAI_API_KEY)
         self.model = "gpt-4o-mini"
         self.prompts = {
             "minutes": MINUTES_FEW_SHOTS,
