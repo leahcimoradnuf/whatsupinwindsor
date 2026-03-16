@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<head>
+    <title>What's up in Windsor</title>
+</head>
+<body>
+{% extends "base.html" %}
+{% block content %}
+{% for meeting_id, article in articles.items() %}
+    <article>
+        <h2>{{ article['headline'] }}</h2>
+        <p>Summarized by: {{ article['byline'] }} | Date: {{ article['meeting_date'] }}</p>
+        <ul>
+            {% for bullet in article['bullets'] %}
+                <li>{{ bullet }}</li>
+            {% endfor %}
+        </ul>
+        <a href="/articles/{{ meeting_id }}">Read more.</a>
+        |
+        <a href= "{{ article['url'] }}">Link to original documents</a>
+        <br>
+        <a href="/report-error">Spot an error? Let me know!</a>
+        <hr>
+   </article>
+{% endfor %}
+{% endblock %}
+</body>
+</html>

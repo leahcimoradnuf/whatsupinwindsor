@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * {
+            font-family: "Georgia"
+        }
+        body {
+            margin: 0;
+            padding: 20px; /* Optional: Add padding for better readability */
+            max-width: 100%; /* Set maximum width to device width initially */
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        @media (min-width: 600px) {
+            /* Adjust the value (600px) based on when you want the max-width to stop changing */
+            body {
+                max-width: 800px; /* Set a fixed maximum width beyond a certain device width */
+            }
+        }
+
+        hr {
+            border: 1px solid #808080; /* Set the color and style of the line */
+            margin: 20px 0; /* Adjust the margin as needed */
+        }
+    </style>
+    <title>What's Up In Windsor</title>
+    <!-- Add any additional meta tags, stylesheets, or scripts here -->
+</head>
+<body>
+    
+
+    <div><center>
+        <!-- <img src="/static/logo_small.png"> -->
+        <h1>What's Up In Windsor</h1>
+        <p>Easy to understand, auto-generated synopsis of what the local government is up to in Windsor, CT.</p>
+        <div>
+            <a href="/about">About</a>
+            |
+            <a href="/">Home</a>
+            |
+            <a href="/contact">Contact</a>
+            |
+            <a href="/support">Support</a>
+        </div>
+        
+    </div></center>
+
+    <hr>
+
+    {% block content %}
+    {% endblock %}
+    
+    <footer>
+        <!-- Footer content, such as copyright information or additional links -->
+        <p>&copy; 2026 Whats Up In Windsor.</p>
+    </footer>
+
+</body>
+</html>
