@@ -65,6 +65,25 @@ def assign():
 
     return assignments
 
-def save_articles():
+def save_articles(articles):
     """Recieve articles from writer.write_article() and add them to the articles table"""
-    pass
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        for article in articles:
+            cur.execute(
+                """
+                INSERT INTO articles (meeting_id, meeting_date, byline, doc_type, summary)
+                VALUES  (%s, %s, %s,  %s, %s)
+                ON CONFLICT (meeting_id, doc_type) DO UPDATE SET
+                    summary = EXCLUDED.summary,
+                    meeting_date = EXCLUDED.meeting_date
+                """,
+                (article['meeting_id'], article['meeting_date'], article['byline'], article["doc_type"], article['summary'])
+            )
+    except Exception as e:
+        conn.rollback()
+        raise
+    finally:
+        cur.close()
+        conn.close()
