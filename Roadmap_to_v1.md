@@ -196,16 +196,17 @@ scraper_runs (
 
 ---
 
-## v0.8 — Extended Institutional Alignment (Optional Future)
-**Goal:** Deeper coordination if appropriate.
+## v0.8 — Documentation & Civic Transparency Package
+**Goal:** Documentation that builds trust and transparency 
 
 **Deliverables:**
-- Formal documentation of system behavior
-- Clear explanation of data handling
-- Discussion of potential collaboration
+- technical documentation of system behavior
+- civic one-pager explaining the app in plain English, to be shared with town officials.
+
 
 **Definition of Done:**
-- Relationship clarified without dependency
+- technical docs live and hosted
+- civic one-pager saved as printable pdf doc
 
 ---
 
