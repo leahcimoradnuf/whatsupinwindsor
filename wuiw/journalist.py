@@ -2,21 +2,31 @@ import os
 import logging
 import json
 from openai import OpenAI
+from anthropic import Anthropic
 from wuiw.config_prompts import EXAMPLE_MINUTES, EXAMPLE_HEADLINE, EXAMPLE_BULLETS, EXAMPLE_BLURB, EXAMPLE_MEETING_DATE
 
 
 logger = logging.getLogger(__name__)
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
+
 MINUTES_FEW_SHOTS = [
     {
         "role": "system",
         "content": """
         You are a neutral, factual reporter who writes concise summaries of official government meeting minutes.
         Your summaries include an impactful headline, a bulleted list of important decisions or discussion points, and a short blurb
-        (3-7 sentances) summarizing the key takeaways. Writing style should be factual and almost boring. Target audience is civic-minded 
+        (3-7 sentences) summarizing the key takeaways. Writing style should be factual and almost boring. Target audience is civic-minded 
         and already engaged, they just want to know what happened in 2 minutes or less.
-        
+
+        When selecting what to include, prioritize in this order:
+        1. Financial decisions, appropriations, and bond votes
+        2. Policy debates and controversial topics with significant public impact
+        3. Upcoming votes, public hearings, or action items
+        4. Board and commission reports with significant findings
+        5. Ceremonial items, proclamations, and awards last — include only if space permits
+
         Always respond in valid JSON with this exact structure:
         {
             "meeting_date": "string; in ISO 8601 format (YYYY-MM-DD)",
@@ -38,8 +48,15 @@ MINUTES_FEW_SHOTS = [
     },{
         "role": "assistant",
         "content": json.dumps({"meeting_date": EXAMPLE_MEETING_DATE[1], "headline": EXAMPLE_HEADLINE[1], "bullets": EXAMPLE_BULLETS[1],"blurb": EXAMPLE_BLURB[1]})
+    },{
+        "role": "user",
+        "content": EXAMPLE_MINUTES[2]
+    },{
+        "role": "assistant",
+        "content": json.dumps({"meeting_date": EXAMPLE_MEETING_DATE[2], "headline": EXAMPLE_HEADLINE[2], "bullets": EXAMPLE_BULLETS[2],"blurb": EXAMPLE_BLURB[2]})
     }
 ]
+
 AGENDA_FEW_SHOTS = ""
 VOTES_FEW_SHOTS = ""
 
@@ -72,3 +89,38 @@ class OpenAIProvider:
         response_data = json.loads(response.choices[0].message.content)
 
         return response_data
+    
+class AnthropicProvider:
+    def __init__(self):
+        self.client = Anthropic(api_key=ANTHROPIC_API_KEY)
+        self.model = "claude-sonnet-4-6"
+        self.system = {"minutes": MINUTES_FEW_SHOTS[0]["content"]}
+        self.prompts = {"minutes": MINUTES_FEW_SHOTS[1:]}
+
+    def summarize(self, text, doc_type):
+        if doc_type not in self.prompts:
+            raise ValueError(f"Unknown doc_type: {doc_type}")
+
+        task = {
+            "role": "user",
+            "content": text
+            }
+        
+        prompt = self.prompts[doc_type] + [task]
+        response = self.client.messages.create(
+            model=self.model,
+            max_tokens=1024,
+            system=self.system[doc_type],
+            messages=prompt
+            )
+ 
+        response_data =  json.loads(response.content[0].text)
+        
+        return response_data
+    
+
+# Providers Registry
+providers = {
+    "OpenAI": OpenAIProvider,
+    "Anthropic": AnthropicProvider
+}

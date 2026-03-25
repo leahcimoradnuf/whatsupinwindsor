@@ -28,10 +28,15 @@ STATUS_COMPLETE = "complete"
 STATUS_FAILED = "failed"
 
 # Journalists
+PROVIDER = "Anthropic" # or "OpenAI", etc...
 _provider = None
 def get_provider():
     global _provider
     if _provider is None:
-        from wuiw.journalist import OpenAIProvider
-        _provider = OpenAIProvider()
+        from wuiw.journalist import providers
+        if PROVIDER not in providers:
+            raise ValueError(f"Unknown provider: {PROVIDER}")
+        
+        _provider = providers[PROVIDER]()
+        
     return _provider
