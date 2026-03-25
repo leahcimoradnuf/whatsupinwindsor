@@ -34,6 +34,7 @@ ARTICLES_FILE="/home/mike/myprojects/whatsupinwindsor/test_data/articles.json"
 # Classification Data
 MUNICIPAL_BODIES = ["Town Council", "Planning Commission", "Board of Education"]
 DOCUMENT_TYPES = ["Agenda", "Minutes", "Votes"]
+MEETING_TYPES = ["Regular Meeting", "Public Hearing", "Special Meeting"]
 
 # State machine
 STATE_FILE = "modified_state.json"
@@ -51,3 +52,6 @@ def get_provider():
         from wuiw.journalist import OpenAIProvider
         _provider = OpenAIProvider()
     return _provider
+
+
+
