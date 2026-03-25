@@ -5,7 +5,7 @@ import feedparser
 import logging
 import datetime
 from email.utils import parsedate_to_datetime
-from wuiw.config import USER_AGENT, STATE_FILE, ASSIGNMENT_LIST, STATUS_PENDING, STATUS_ASSIGNED, MUNICIPAL_BODIES, STATUS_FAILED
+from wuiw.config import USER_AGENT, STATE_FILE, ASSIGNMENT_LIST, STATUS_PENDING, STATUS_ASSIGNED, MUNICIPAL_BODIES, STATUS_FAILED, MEETING_TYPES
 from rapidfuzz import process
 
 logger = logging.getLogger(__name__)
@@ -61,6 +61,7 @@ def get_rss(rss_url):
             title = entry["title"]
             body = classify(title, MUNICIPAL_BODIES)
             body = "_".join(body.lower().split())
+            meeting_type = classify(title, MEETING_TYPES)
             year = entry["published_parsed"][0]
             month = entry["published_parsed"][1]
             day = entry["published_parsed"][2]
@@ -74,6 +75,7 @@ def get_rss(rss_url):
 
             new_entries[composite_id] = {
                 "meeting_id": meeting_id,
+                "meeting_type": meeting_type,
                 "body": body,
                 "published_date": pub_date,
                 "materials": url
