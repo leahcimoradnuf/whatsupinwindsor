@@ -2,12 +2,15 @@ import os
 import logging
 import json
 from openai import OpenAI
+from anthropic import Anthropic
 from wuiw.config_prompts import EXAMPLE_MINUTES, EXAMPLE_HEADLINE, EXAMPLE_BULLETS, EXAMPLE_BLURB, EXAMPLE_MEETING_DATE
 
 
 logger = logging.getLogger(__name__)
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
+
 [REDACTED]
 
 class OpenAIProvider:
@@ -39,3 +42,38 @@ class OpenAIProvider:
         response_data = json.loads(response.choices[0].message.content)
 
         return response_data
+    
+class AnthropicProvider:
+    def __init__(self):
+        self.client = Anthropic(api_key=ANTHROPIC_API_KEY)
+        self.model = "claude-sonnet-4-6"
+        self.system = {"minutes": MINUTES_FEW_SHOTS[0]["content"]}
+        self.prompts = {"minutes": MINUTES_FEW_SHOTS[1:]}
+
+    def summarize(self, text, doc_type):
+        if doc_type not in self.prompts:
+            raise ValueError(f"Unknown doc_type: {doc_type}")
+
+        task = {
+            "role": "user",
+            "content": text
+            }
+        
+        prompt = self.prompts[doc_type] + [task]
+        response = self.client.messages.create(
+            model=self.model,
+            max_tokens=1024,
+            system=self.system[doc_type],
+            messages=prompt
+            )
+ 
+        response_data =  json.loads(response.content[0].text)
+        
+        return response_data
+    
+
+# Providers Registry
+providers = {
+    "OpenAI": OpenAIProvider,
+    "Anthropic": AnthropicProvider
+}
