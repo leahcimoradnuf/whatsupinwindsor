@@ -5,7 +5,7 @@ import time
 from pypdf import PdfReader
 from bs4 import BeautifulSoup
 from logging import getLogger
-from wuiw.intake import classify
+from wuiw.util import classify
 from wuiw.config import DOCUMENT_TYPES, HEADERS, STATUS_ASSIGNED, STATUS_FAILED, REQUEST_DELAY
 
 logger = getLogger(__name__)

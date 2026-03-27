@@ -1,6 +1,6 @@
 import psycopg2
-from config import get_db_connection
-from config import STATUS_PENDING, STATUS_ASSIGNED, STATUS_COMPLETE, STATUS_FAILED
+from wuiw.config import get_db_connection
+from wuiw.config import STATUS_PENDING, STATUS_ASSIGNED, STATUS_COMPLETE, STATUS_FAILED
 
 def update_status(meeting_id, status, error_message=None):
     """Update status of an assignment in the database"""
@@ -9,7 +9,7 @@ def update_status(meeting_id, status, error_message=None):
     if error_message:
         cur.execute("UPDATE assignments SET status = %s, error_message = %s where meeting_id=%s", (status, error_message, meeting_id))
     else:
-        cur.execute("UPDATE assignments SET status = %s WHERE meeting_id = %s", (status, meeting_id))
+        cur.execute("UPDATE assignments SET status = %s, error_message = NULL WHERE meeting_id = %s", (status, meeting_id))
     conn.commit()
     cur.close()
     conn.close()
