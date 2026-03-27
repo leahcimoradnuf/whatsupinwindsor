@@ -121,6 +121,7 @@ def test_write_returns_valid_tuple(mock_provider):
     assert result[2] == None
     assert result[0]["meeting_id"] == "town_council_1234_2026"
     assert result[0]["byline"] == "gpt-4o-mini"
+    assert result[0]["doc_type"] == "minutes"
 
 def test_write_returns_failed(mock_provider):
     # summarize returns bad data to trigger review_article failure
