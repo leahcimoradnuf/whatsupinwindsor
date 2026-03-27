@@ -9,6 +9,7 @@ def test_v03_transcribe_successful():
     with open("tests/fixtures/sample_minutes.pdf", "rb") as f:
         pdf_stream = io.BytesIO(f.read())
     text = _transcribe_doc(pdf_stream)
+
     assert len(text) > 0
 
 def test_v03_transcribe_handles_unreadable_pdf():
@@ -34,6 +35,7 @@ def test_v03_valid_path(file_server):
     """Happy path returns: (documents, STATUS_ASSIGNED, None)"""
     url = "http://localhost:8000/sample_materials.html"
     documents, status, error = fetch_documents(url)
+
     assert isinstance(documents, dict)
     assert "agenda" in documents.keys()
     assert "minutes" in documents.keys()
@@ -44,13 +46,44 @@ def test_v03_valid_path(file_server):
 
 def test_v03_skip_non200_pdf():
     """non-200 pdf stream request skips entry and continues"""
-    pass
+    mock_200 = MagicMock()
+    mock_200.status_code = 200
+    mock_200.content = open("tests/fixtures/sample_minutes.pdf", "rb").read()
 
-def test_v03_doc_type_returns_requested():
+    mock_404 = MagicMock()
+    mock_404.status_code = 404
+
+    with open("tests/fixtures/sample_materials.html", "r") as f:
+        materials_html = f.read()
+
+    with patch("wuiw.reporter.requests.get") as mock_get:
+        with patch("wuiw.reporter.time.sleep"):
+            mock_get.side_effect = [
+                MagicMock(status_code=200, text=materials_html),  # materials page
+                mock_200,  # first PDF - succeeds
+                mock_404,  # second PDF - fails
+                mock_200   # third PDF - succeeds
+            ]
+            documents, status, error = fetch_documents("http://example.com")
+    
+    assert len(documents.keys()) == 2
+    assert status == STATUS_ASSIGNED
+    assert error is None
+
+def test_v03_doc_type_returns_requested(file_server):
     """only requested doc type is returned
     doc_type filter for type not in documents returns ({}, STATUS_FAILED, error_message)"""
-    pass
+    url = "http://localhost:8000/sample_materials.html"
+    with patch("wuiw.reporter.time.sleep"):
+        documents, status, error = fetch_documents(url, doc_type="minutes")
 
-def test_v03_unclassified_doc_type_handled():
-    pass
+    assert len(documents.keys()) == 1
+    assert "minutes" in documents
+
+def test_v03_unclassified_doc_type_handled(file_server):
+    """classify() doesn't catch 'vote' from 'Voting Grid', so it returns unclassified"""
+    url = "http://localhost:8000/sample_materials.html"
+    documents, status, error = fetch_documents(url)
+    
+    assert "unclassified" in documents
 
