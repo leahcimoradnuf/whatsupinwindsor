@@ -29,11 +29,11 @@ def save_modified(modified_struct):
         json.dump({"modified": formatted}, f)
 
 def classify(title, classifications, threshold=80):
-    match, score, _ = process.extractOne(title, classifications)
+    match, score, _ = process.extractOne(title.lower(), [c.lower() for c in classifications])
     if score >= threshold:
         return match
     logger.warning("Could not classify body from title: %s", title)
-    return "Not Classified"
+    return "unclassified"
 
 def get_rss(rss_url):
     stored_modified = load_modified()

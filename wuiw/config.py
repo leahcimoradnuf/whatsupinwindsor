@@ -6,13 +6,13 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# HTTP header info
+# HTTP behavior
 USER_AGENT = "WUIW/0.1 (+https://app.whatsupinwindsor.com; contact: mike@whatsupinwindsor.com)"
-
 HEADERS = {
     "User-Agent": USER_AGENT,
     "Accept": "application/rss+xml, application/xml;q=0.9, */*;q=0.8",
 }
+REQUEST_DELAY = 20
 
 # Scraper Target
 RSS_URL="https://www.windsorct.gov/RSSFeed.aspx?ModID=65&CID=All-0"
@@ -32,8 +32,8 @@ RSS_CURL="http://localhost:8000/town_council_rss.xml"
 ARTICLES_FILE="/home/mike/myprojects/whatsupinwindsor/test_data/articles.json"
 
 # Classification Data
-MUNICIPAL_BODIES = ["Town Council", "Planning Commission", "Board of Education"]
-DOCUMENT_TYPES = ["Agenda", "Minutes", "Votes"]
+MUNICIPAL_BODIES = ["Town Council", "Planning Commission", "Board of Education"] #TODO expand this to cover all bodies of govt
+DOCUMENT_TYPES = ["Agenda", "Minutes", "Vote"]
 MEETING_TYPES = ["Regular Meeting", "Public Hearing", "Special Meeting"]
 
 # State machine
