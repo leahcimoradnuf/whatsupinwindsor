@@ -1,5 +1,5 @@
 from unittest.mock import MagicMock, patch
-from wuiw.editor import update_status
+from wuiw.editor import update_status, save_assignments
 from wuiw.config import STATUS_PENDING, STATUS_ASSIGNED, STATUS_COMPLETE, STATUS_FAILED
 
 def test_db_fixture(db_conn):
@@ -32,3 +32,71 @@ def test_v03_update_status_with_error(editor_db):
     second_result = cur.fetchone()
 
     assert second_result[0] is None
+
+def test_v03_save_new_assignments(editor_db):
+    new_assignments = [
+        {
+            "meeting_id": "town_council_1263_2026",
+            "meeting_type": "Regular Meeting",
+            "body": "Town Council",
+            "published_date": "2026-01-20",
+            "materials": "/link/to/html"
+        },{
+            "meeting_id": "town_council_5643_2026",
+            "meeting_type": "Regular Meeting",
+            "body": "Town Council",
+            "published_date": "2026-01-05",
+            "materials": "/link/to/html"
+        }
+    ]
+
+    save_assignments(new_assignments)
+    cur = editor_db.cursor()
+    cur.execute("SELECT meeting_id FROM assignments")
+    result = cur.fetchall()
+
+    assert len(result) == 2 # 3 would mean there's a duplicate
+
+    cur.execute("SELECT status FROM assignments WHERE meeting_id = %s", ("town_council_1263_2026",))
+    assert cur.fetchone()[0] == "pending"
+
+    cur.execute("SELECT status FROM assignments WHERE meeting_id = %s", ("town_council_5643_2026",))
+    assert cur.fetchone()[0] == "pending"
+
+def test_v03_save_new_material_resets_status(editor_db):
+    new_assignments = [
+        {
+            "meeting_id": "town_council_1263_2026",
+            "meeting_type": "Regular Meeting",
+            "body": "Town Council",
+            "published_date": "2026-01-20",
+            "materials": "/link/to/new/html"
+        }
+    ]
+    # make the status 'assigned'
+    update_status("town_council_1263_2026", STATUS_COMPLETE)
+    cur = editor_db.cursor()
+    cur.execute("SELECT status FROM assignments WHERE meeting_id = %s", ("town_council_1263_2026",))
+    assert cur.fetchone()[0] == "complete"
+
+    # save the assignment with a new materials link
+    save_assignments(new_assignments)
+    cur.execute("SELECT status FROM assignments WHERE meeting_id = %s", ("town_council_1263_2026",))
+    assert cur.fetchone()[0] == "pending"
+
+def test_v03_unchanged_assignment_preserves_status(editor_db):
+    # set status to complete
+    update_status("town_council_1263_2026", STATUS_COMPLETE)
+    
+    # save identical data
+    save_assignments([{
+        "meeting_id": "town_council_1263_2026",
+        "meeting_type": "Regular Meeting",
+        "body": "Town Council",
+        "published_date": "2026-01-20",
+        "materials": "/link/to/html"  # same as seeded_db
+    }])
+    
+    cur = editor_db.cursor()
+    cur.execute("SELECT status FROM assignments WHERE meeting_id = %s", ("town_council_1263_2026",))
+    assert cur.fetchone()[0] == "complete"
