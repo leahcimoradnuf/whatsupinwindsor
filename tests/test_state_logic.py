@@ -3,13 +3,14 @@
 import os
 import time
 import json
+import pytest
 
 from unittest.mock import patch, MagicMock
 from wuiw.intake import get_rss, sort_assignments, assign, update_status
 from wuiw.config import STATE_FILE, ASSIGNMENT_LIST, USER_AGENT, STATUS_PENDING, STATUS_ASSIGNED, STATUS_COMPLETE, STATUS_FAILED
 
 
-def test_304_no_changes():
+def test_v01_304_no_changes():
     """if the Last-Modified header of the feed is not newer than the last run, do nothing"""
     mock_feed = MagicMock()
     mock_feed.status = 304
@@ -23,7 +24,8 @@ def test_304_no_changes():
     assert result == {}
     mock_save.assert_not_called()
 
-def test_first_run_creates_files(tmp_path, monkeypatch):
+@pytest.mark.skip(reason="deprecated in v0.3 - JSON state logic retired")
+def test_v01_first_run_creates_files(tmp_path, monkeypatch):
     """if no modified_state.json or assignments.json exist, they are created"""
 
     # Create temporary file path
@@ -56,7 +58,8 @@ def test_first_run_creates_files(tmp_path, monkeypatch):
     assert os.path.exists(temp_mod_state)
     assert os.path.exists(temp_assignments)
 
-def test_modified_header_updates_state():
+@pytest.mark.skip(reason="deprecated in v0.3 - JSON state logic retired")
+def test_v01_modified_header_updates_state():
     """Confirm date in modified_state.json is updated to known date of new feed"""
     fake_modified = time.gmtime()
 
@@ -84,7 +87,7 @@ def test_modified_header_updates_state():
         # Assert output is an empty dict
         assert result == {}
 
-def test_idempotent_double_run(tmp_path, monkeypatch):
+def test_v01_idempotent_double_run(tmp_path, monkeypatch):
     """Run thrice and confirm no duplicates and no second write"""
 
     # Create temporary file path
@@ -182,7 +185,7 @@ def test_idempotent_double_run(tmp_path, monkeypatch):
     # new data should change assignement state to False
     assert data_after_fourth["123"]["status"] == STATUS_PENDING
 
-def test_assignment_state_handler(tmp_path, monkeypatch):
+def test_v01_assignment_state_handler(tmp_path, monkeypatch):
     """test assign() interaction with assignments file"""
     # set temporary file
     temp_file = tmp_path / "assignments.json"
@@ -261,7 +264,7 @@ def test_assignment_state_handler(tmp_path, monkeypatch):
 
     assert no_new_tasks == []
 
-def test_update_status_helper(tmp_path, monkeypatch):
+def test_v01_update_status_helper(tmp_path, monkeypatch):
     # set temporary file
     temp_file = tmp_path / "assignments.json"
     # Patch ASSIGNMENT_LIST to use temp file
@@ -292,7 +295,7 @@ def test_update_status_helper(tmp_path, monkeypatch):
 
 # INTEGRATION TESTS
 
-def test_sort_then_assign(tmp_path, monkeypatch):
+def test_v01_sort_then_assign(tmp_path, monkeypatch):
     # set temporary file
     temp_file = tmp_path / "assignments.json"
     # Patch ASSIGNMENT_LIST to use temp file
