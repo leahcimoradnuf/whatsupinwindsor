@@ -59,7 +59,10 @@ def write_article(meeting_id, text, doc_type, chunked=False):
     if status == STATUS_FAILED:
         return None, STATUS_FAILED, error
     
-    article["meeting_id"] = meeting_id
-    article["byline"] = provider.model
-    article["doc_type"] = doc_type
-    return article, STATUS_COMPLETE, None
+    return {
+        "meeting_id": meeting_id,
+        "meeting_date": article.get("meeting_date"),
+        "byline": provider.model,
+        "doc_type": doc_type,
+        "summary": article
+    }, STATUS_COMPLETE, None

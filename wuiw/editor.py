@@ -1,4 +1,6 @@
 import psycopg2
+import psycopg2.extras
+import json
 from wuiw.config import get_db_connection
 from wuiw.config import STATUS_PENDING, STATUS_ASSIGNED, STATUS_COMPLETE, STATUS_FAILED
 
@@ -46,7 +48,7 @@ def assign():
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     try:
         cur.execute(
-            """SELECT meeting_id, meeting_type, materials, status
+            """SELECT assignments.meeting_id, meeting_type, materials, status
             FROM assignments
             LEFT JOIN articles ON assignments.meeting_id = articles.meeting_id
             WHERE assignments.status = 'pending' AND articles.meeting_id IS NULL;
@@ -79,7 +81,7 @@ def save_articles(articles):
                     summary = EXCLUDED.summary,
                     meeting_date = EXCLUDED.meeting_date
                 """,
-                (article['meeting_id'], article['meeting_date'], article['byline'], article["doc_type"], article['summary'])
+                (article['meeting_id'], article['meeting_date'], article['byline'], article["doc_type"], json.dumps(article['summary']))
             )
     except Exception as e:
         conn.rollback()

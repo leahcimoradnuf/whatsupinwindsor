@@ -5,7 +5,7 @@ import subprocess
 import time
 import os
 import psycopg2
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 # Classes
 
@@ -51,6 +51,7 @@ def db_conn():
         id SERIAL PRIMARY KEY,
         meeting_id TEXT UNIQUE NOT NULL,
         meeting_date DATE,
+        byline TEXT,
         doc_type TEXT,
         summary JSONB,
         UNIQUE (meeting_id, doc_type));"""
@@ -69,7 +70,7 @@ def seeded_db(db_conn):
     cur.execute(
         """INSERT INTO assignments (meeting_id, meeting_type, body, published_date, materials, status)
         VALUES (%s, %s, %s, %s, %s, %s)""",
-        ("town_council_1263_2026", "Regular Meeting", "Town Council", "2026-01-20", "/link/to/html", "pending")
+        ("town_council_1263_2026", "Regular Meeting", "Town Council", "2026-01-20", "http://link/to/html", "pending")
     )
     db_conn.commit()
     yield db_conn
@@ -78,3 +79,11 @@ def seeded_db(db_conn):
 def editor_db(seeded_db):
     with patch("wuiw.editor.get_db_connection", return_value=seeded_db):
         yield seeded_db
+
+@pytest.fixture
+def mock_provider():
+    """mock up a connection to AI provider"""
+    with patch("wuiw.writer.get_provider") as mock_get:
+        provider = MagicMock()
+        mock_get.return_value = provider
+        yield provider

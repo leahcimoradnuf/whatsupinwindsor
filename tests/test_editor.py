@@ -94,7 +94,7 @@ def test_v03_unchanged_assignment_preserves_status(editor_db):
         "meeting_type": "Regular Meeting",
         "body": "Town Council",
         "published_date": "2026-01-20",
-        "materials": "/link/to/html"  # same as seeded_db
+        "materials": "http://link/to/html"  # same as seeded_db
     }])
     
     cur = editor_db.cursor()
