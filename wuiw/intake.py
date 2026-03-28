@@ -5,8 +5,8 @@ import feedparser
 import logging
 import datetime
 from email.utils import parsedate_to_datetime
-from wuiw.config import USER_AGENT, STATE_FILE, ASSIGNMENT_LIST, STATUS_PENDING, STATUS_ASSIGNED, MUNICIPAL_BODIES, STATUS_FAILED
-from rapidfuzz import process
+from wuiw.config import USER_AGENT, STATE_FILE, ASSIGNMENT_LIST, STATUS_PENDING, STATUS_ASSIGNED, MUNICIPAL_BODIES, STATUS_FAILED, MEETING_TYPES
+from wuiw.util import classify
 
 logger = logging.getLogger(__name__)
 
@@ -28,13 +28,6 @@ def save_modified(modified_struct):
     with open(STATE_FILE, "w") as f:
         json.dump({"modified": formatted}, f)
 
-def classify(title, classifications, threshold=80):
-    match, score, _ = process.extractOne(title, classifications)
-    if score >= threshold:
-        return match
-    logger.warning("Could not classify body from title: %s", title)
-    return "Not Classified"
-
 def get_rss(rss_url):
     stored_modified = load_modified()
 
@@ -53,7 +46,7 @@ def get_rss(rss_url):
     
     # Parse the feed
     logger.info("STATUS: %s; Parsing new data", feed.status)
-    new_entries = {}
+    new_entries = []
     for entry in feed.entries:
         try:    
             id_parts = entry["id"].split("/")
@@ -61,6 +54,7 @@ def get_rss(rss_url):
             title = entry["title"]
             body = classify(title, MUNICIPAL_BODIES)
             body = "_".join(body.lower().split())
+            meeting_type = classify(title, MEETING_TYPES)
             year = entry["published_parsed"][0]
             month = entry["published_parsed"][1]
             day = entry["published_parsed"][2]
@@ -72,12 +66,13 @@ def get_rss(rss_url):
                 f"ViewFile/Agenda/_{month:02d}{day:02d}{year}-{meeting_id}?html=true"
             )
 
-            new_entries[composite_id] = {
-                "meeting_id": meeting_id,
+            new_entries.append({
+                "meeting_id": composite_id,
+                "meeting_type": meeting_type,
                 "body": body,
                 "published_date": pub_date,
                 "materials": url
-                }
+                })
 
         except KeyError as e:
             logger.warning("bad entry: %s", e)

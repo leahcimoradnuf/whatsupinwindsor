@@ -4,7 +4,7 @@ from wuiw.intake import get_rss, classify
 from unittest.mock import MagicMock, patch
 from wuiw.config import MUNICIPAL_BODIES, RSS_CURL
 
-def test_bad_entries_handled():
+def test_v01_bad_entries_handled():
     """
     entries = get_rss(RSS_URL)
     assert isinstance(entries, dict)
@@ -24,9 +24,9 @@ def test_bad_entries_handled():
     
         result = get_rss("http://example.com/rss")
 
-    assert result == {}
+    assert result == []
 
-def test_required_fields_present():
+def test_v01_required_fields_present():
     mock_feed = MagicMock()
     mock_feed.status = 200
     mock_feed.modified_parsed = None
@@ -49,20 +49,20 @@ def test_required_fields_present():
         
         result = get_rss("http://example.com/rss")
 
-    # Test first entry is output correctly 
-    assert "town_council_1419_2026" in result
-    assert result["town_council_1419_2026"]["meeting_id"] == "1419"
-    assert result["town_council_1419_2026"]["body"] == "town_council"
-    assert result["town_council_1419_2026"]["published_date"] == "2026-01-15"
-    assert result["town_council_1419_2026"]["materials"] == "https://www.windsorct.gov/AgendaCenter/ViewFile/Agenda/_01152026-1419?html=true"
+    # Test first entry is output correctly
+    assert len(result) == 2
+    assert result[0]["meeting_id"] == "town_council_1419_2026"
+    assert result[0]["body"] == "town_council"
+    assert result[0]["published_date"] == "2026-01-15"
+    assert result[0]["materials"] == "https://www.windsorct.gov/AgendaCenter/ViewFile/Agenda/_01152026-1419?html=true"
 
     # Test second entry unclassified title is handled
-    assert "not_classified_5643_2025" in result
+    assert result[1]["meeting_id"] == "unclassified_5643_2025"
 
-def test_date_parsing_valid():
+def test_v01_date_parsing_valid():
     pass
 
-def test_classify_body():
+def test_v01_classify_body():
     """Classify gov body based on meeting title"""
     entries = [
         "Town Council Regular Meeting",
@@ -75,6 +75,6 @@ def test_classify_body():
     for entry in entries:
         bodies.append(classify(entry, MUNICIPAL_BODIES, threshold=75))
 
-    assert bodies == ["Town Council", "Town Council", "Planning Commission", "Not Classified"]
+    assert bodies == ["town council", "town council", "planning commission", "unclassified"]
 
 
