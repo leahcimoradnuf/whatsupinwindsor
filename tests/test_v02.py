@@ -100,13 +100,6 @@ def test_review_bullets_not_list():
     assert reviewed[1] == STATUS_FAILED
     assert reviewed[2] == "bullets is not a list"
 
-@pytest.fixture
-def mock_provider():
-    with patch("wuiw.writer.get_provider") as mock_get:
-        provider = MagicMock()
-        mock_get.return_value = provider
-        yield provider
-
 def test_write_returns_valid_tuple(mock_provider):
     mock_provider.summarize.return_value = {
         "meeting_date": "2026-01-20",

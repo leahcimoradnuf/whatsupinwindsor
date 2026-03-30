@@ -1,15 +1,33 @@
 import json
+import psycopg2
+import psycopg2.extras
 from flask import Flask, render_template, abort
-from wuiw.config import ARTICLES_FILE
+from wuiw.config import ARTICLES_FILE, get_db_connection
 
 app = Flask(__name__)
 
 @app.route("/home")
 @app.route("/")
 def index():
-    with open(ARTICLES_FILE, 'r') as f:
-        articles = json.load(f)
-    sorted_articles = dict(sorted(articles.items(), key=lambda item: item[1]['meeting_date'], reverse=True))
+    conn = get_db_connection()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cur.execute("""SELECT 
+                    assignments.meeting_id,
+                    assignments.meeting_type,
+                    assignments.materials,
+                    articles.meeting_date,
+                    articles.byline,
+                    articles.summary
+                FROM assignments
+                JOIN articles ON assignments.meeting_id = articles.meeting_id
+                WHERE articles.doc_type = 'minutes'""")
+    articles = cur.fetchall()
+    cur.close()
+    conn.close()
+    for article in articles:
+        article["meeting_date"] = article["meeting_date"].strftime("%Y-%m-%d")
+
+    sorted_articles = sorted(articles, key=lambda item: item['meeting_date'], reverse=True)
     return render_template("index.html", articles=sorted_articles)
 
 @app.route("/articles/<meeting_id>")
