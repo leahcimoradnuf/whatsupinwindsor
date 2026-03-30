@@ -5,18 +5,18 @@
 <body>
 {% extends "base.html" %}
 {% block content %}
-{% for meeting_id, article in articles.items() %}
+{% for article in articles %}
     <article>
-        <h2>{{ article['headline'] }}</h2>
+        <h2>{{ article['summary']['headline'] }}</h2>
         <p>Summarized by: {{ article['byline'] }} | Date: {{ article['meeting_date'] }}</p>
         <ul>
-            {% for bullet in article['bullets'] %}
+            {% for bullet in article['summary']['bullets'] %}
                 <li>{{ bullet }}</li>
             {% endfor %}
         </ul>
-        <a href="/articles/{{ meeting_id }}">Read more.</a>
+        <a href="/articles/{{ articles['meeting_id'] }}">Read more.</a>
         |
-        <a href= "{{ article['url'] }}">Link to original documents</a>
+        <a href= "{{ article['materials'] }}">Link to original documents</a>
         <br>
         <a href="/report-error">Spot an error? Let me know!</a>
         <hr>

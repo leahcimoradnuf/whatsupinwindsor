@@ -18,6 +18,7 @@ REQUEST_DELAY = 20
 RSS_URL="https://www.windsorct.gov/RSSFeed.aspx?ModID=65&CID=All-0"
 
 # Database Configuration
+
 def get_db_connection():
     return psycopg2.connect(
         dbname=os.getenv("DB_NAME"),

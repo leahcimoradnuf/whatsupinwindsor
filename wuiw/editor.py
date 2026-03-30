@@ -55,6 +55,7 @@ def assign():
             """
         )
         assignments = cur.fetchall()
+        conn.commit()
     except Exception as e:
         conn.rollback()
         raise
@@ -76,13 +77,14 @@ def save_articles(articles):
             cur.execute(
                 """
                 INSERT INTO articles (meeting_id, meeting_date, byline, doc_type, summary)
-                VALUES  (%s, %s, %s,  %s, %s)
+                VALUES  (%s, %s, %s, %s, %s)
                 ON CONFLICT (meeting_id, doc_type) DO UPDATE SET
                     summary = EXCLUDED.summary,
                     meeting_date = EXCLUDED.meeting_date
                 """,
                 (article['meeting_id'], article['meeting_date'], article['byline'], article["doc_type"], json.dumps(article['summary']))
             )
+        conn.commit()
     except Exception as e:
         conn.rollback()
         raise
