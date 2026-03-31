@@ -33,11 +33,25 @@ def index():
 @app.route("/articles/<meeting_id>")
 def article(meeting_id):
     # render single article
-    with open(ARTICLES_FILE, 'r') as f:
-        articles = json.load(f)
-    if meeting_id not in articles:
-        abort(404)
-    return render_template("article.html", article=articles[meeting_id])
+    conn = get_db_connection() 
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) 
+    cur.execute("""
+                SELECT
+                    assignments.meeting_type,
+                    assignments.materials,
+                    articles.meeting_date,
+                    articles.byline,
+                    articles.summary
+                FROM assignments
+                JOIN articles ON assignments.meeting_id = articles.meeting_id
+                WHERE assignments.meeting_id = %s AND articles.doc_type = 'minutes';
+        """, (meeting_id,))
+    article = cur.fetchone()
+    cur.close()
+    conn.close()
+    if article is None:
+         abort(404)
+    return render_template("article.html", article=article)
 
 @app.route("/report-error")
 def report_error():
