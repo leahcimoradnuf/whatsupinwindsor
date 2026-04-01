@@ -1,8 +1,6 @@
-import pytest
-import datetime
 from wuiw.intake import get_rss, classify
 from unittest.mock import MagicMock, patch
-from wuiw.config import MUNICIPAL_BODIES, RSS_CURL
+from wuiw.config import MUNICIPAL_BODIES
 
 def test_v01_bad_entries_handled():
     """
@@ -18,9 +16,7 @@ def test_v01_bad_entries_handled():
         }
     ]
 
-    with patch("wuiw.intake.feedparser.parse", return_value=mock_feed), \
-         patch("wuiw.intake.load_modified", return_value=None), \
-         patch("wuiw.intake.save_modified", return_value=None):
+    with patch("wuiw.intake.feedparser.parse", return_value=mock_feed):
     
         result = get_rss("http://example.com/rss")
 
@@ -43,9 +39,7 @@ def test_v01_required_fields_present():
         }
     ]
 
-    with patch("wuiw.intake.feedparser.parse", return_value=mock_feed),\
-         patch("wuiw.intake.load_modified", return_value=None),\
-         patch("wuiw.intake.save_modified"):
+    with patch("wuiw.intake.feedparser.parse", return_value=mock_feed):
         
         result = get_rss("http://example.com/rss")
 
