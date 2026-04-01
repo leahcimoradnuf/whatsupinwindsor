@@ -15,39 +15,27 @@ HEADERS = {
 REQUEST_DELAY = 20
 
 # Scraper Target
-RSS_URL="https://www.windsorct.gov/RSSFeed.aspx?ModID=65&CID=All-0"
+RSS_URL=os.getenv("RSS_URL")
 
 # Database Configuration
 
 def get_db_connection():
-    return psycopg2.connect(
-        dbname=os.getenv("DB_NAME"),
-        user=os.getenv("DB_USER"),
-        password=os.getenv("DB_PASSWORD"),
-        host=os.getenv("DB_HOST"),
-        port=os.getenv("DB_PORT")
-    )
+    return psycopg2.connect(os.getenv("DATABASE_URL"))
 
-# Test Data
-RSS_CURL="http://localhost:8000/town_council_rss.xml"
-ARTICLES_FILE="/home/mike/myprojects/whatsupinwindsor/test_data/articles.json"
 
 # Classification Data
 DOCUMENT_TYPES = ["Agenda", "Minutes", "Votes"]
 MUNICIPAL_BODIES = ["Town Council", "Planning Commission", "Board of Education"] #TODO expand this to cover all bodies of govt
-DOCUMENT_TYPES = ["Agenda", "Minutes", "Vote"]
 MEETING_TYPES = ["Regular Meeting", "Public Hearing", "Special Meeting"]
 
 # State machine
-STATE_FILE = "modified_state.json"
-ASSIGNMENT_LIST = "assignments.json"
 STATUS_PENDING = "pending"
 STATUS_ASSIGNED = "assigned"
 STATUS_COMPLETE = "complete"
 STATUS_FAILED = "failed"
 
 # Journalists
-PROVIDER = "Anthropic" # or "OpenAI", etc...
+PROVIDER = os.getenv("PROVIDER") 
 _provider = None
 def get_provider():
     global _provider
