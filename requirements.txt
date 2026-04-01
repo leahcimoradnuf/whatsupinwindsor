@@ -71,4 +71,3 @@ typing_extensions==4.15.0
 urllib3==2.6.3
 wcwidth==0.6.0
 Werkzeug==3.1.6
--e git+https://github.com/leahcimoradnuf/whatsupinwindsor.git@94f27710ea78248c7dc2f6798880590a0c8481c5#egg=wuiw
