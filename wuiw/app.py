@@ -2,7 +2,7 @@ import json
 import psycopg2
 import psycopg2.extras
 from flask import Flask, render_template, abort
-from wuiw.config import ARTICLES_FILE, get_db_connection
+from wuiw.config import get_db_connection
 
 app = Flask(__name__)
 
