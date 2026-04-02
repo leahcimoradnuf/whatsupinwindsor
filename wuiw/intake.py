@@ -4,9 +4,11 @@ import os
 import feedparser
 import logging
 import datetime
-from email.utils import parsedate_to_datetime
-from wuiw.config import USER_AGENT, STATUS_PENDING, STATUS_ASSIGNED, MUNICIPAL_BODIES, STATUS_FAILED, MEETING_TYPES
+import requests
+import time
+from wuiw.config import USER_AGENT, HEADERS, MUNICIPAL_BODIES, MEETING_TYPES, REQUEST_DELAY
 from wuiw.util import classify
+from bs4 import BeautifulSoup
 
 logger = logging.getLogger(__name__)
 
@@ -56,3 +58,43 @@ def get_rss(rss_url):
             continue
                     
     return new_entries
+
+def backfill(start, end, body_id):
+    """ Where start and end are date strings in ISO format
+    body_id is int (18 for Windsor TC)"""
+    assignments = []
+    base_url = "https://www.windsorct.gov/AgendaCenter/ViewFile/Agenda/_"
+    start_date = datetime.date.fromisoformat(start)
+    end_date = datetime.date.fromisoformat(end)
+    # construct url and issue requests.get() 
+    url = f"https://www.windsorct.gov/AgendaCenter/Search/?term=&CIDs={body_id},&startDate={start_date.month:02d}/{start_date.day:02d}/{start_date.year}&endDate={end_date.month:02d}/{end_date.day:02d}/{end_date.year}&dateRange=&dateSelector="
+    # HTTP request
+    response = requests.get(url, headers=HEADERS)
+    
+    if response.status_code != 200:
+        logger.error("Backfill request failed: %s", response.status_code)
+        return []
+    
+    time.sleep(REQUEST_DELAY)
+    soup = BeautifulSoup(response.text, 'html.parser')
+    leads = soup.select('td p a[id]')
+    for lead in leads:
+        body = classify(lead.text, MUNICIPAL_BODIES)
+        body = "_".join(body.lower().split())
+        meeting_type = classify(lead.text, MEETING_TYPES)
+        month = lead["id"][0:2]
+        day = lead["id"][2:4]
+        year = lead["id"][4:8]
+        published_date = f"{year}-{month}-{day}"
+        meeting_id = f"{body}_{lead['name']}_{year}"
+        materials = f"{base_url}{lead['id']}?html=true"
+
+        assignments.append({
+            "meeting_id": meeting_id,
+            "meeting_type": meeting_type,
+            "body": body,
+            "published_date": published_date,
+            "materials": materials
+        })
+    
+    return assignments
