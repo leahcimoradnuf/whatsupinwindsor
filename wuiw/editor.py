@@ -28,7 +28,7 @@ def save_assignments(rss_assignments):
                 ON CONFLICT (meeting_id) DO UPDATE SET
                     meeting_type=EXCLUDED.meeting_type,
                     materials=EXCLUDED.materials,
-                    body=EXCLUDED.materials,
+                    body=EXCLUDED.body,
                     published_date=EXCLUDED.published_date,
                     status='pending'
                 WHERE assignments.materials != EXCLUDED.materials
