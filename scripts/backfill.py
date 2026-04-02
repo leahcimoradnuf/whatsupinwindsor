@@ -3,6 +3,12 @@ import logging
 from wuiw.intake import backfill
 from wuiw.editor import save_assignments
 
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+    handlers=[logging.StreamHandler()]  # stdout
+)
+
 logger = logging.getLogger(__name__)
 
 def main():
