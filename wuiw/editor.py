@@ -23,15 +23,16 @@ def save_assignments(rss_assignments):
     try:
         for assignment in rss_assignments:
             cur.execute(
-                """INSERT INTO assignments (meeting_id, meeting_type, published_date, materials, status)
-                VALUES (%s, %s, %s, %s, 'pending')
+                """INSERT INTO assignments (meeting_id, meeting_type, body, published_date, materials, status)
+                VALUES (%s, %s, %s, %s, %s'pending')
                 ON CONFLICT (meeting_id) DO UPDATE SET
                     meeting_type=EXCLUDED.meeting_type,
                     materials=EXCLUDED.materials,
+                    body=EXCLUDED.materials,
                     published_date=EXCLUDED.published_date,
                     status='pending'
                 WHERE assignments.materials != EXCLUDED.materials
-                """, (assignment['meeting_id'], assignment['meeting_type'], assignment['published_date'], assignment['materials'])
+                """, (assignment['meeting_id'], assignment['meeting_type'], assignment['body'], assignment['published_date'], assignment['materials'])
                 )
         conn.commit()
     except Exception as e:
