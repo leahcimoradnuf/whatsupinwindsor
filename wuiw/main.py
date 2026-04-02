@@ -1,5 +1,3 @@
-#TODO update shebang once deployed to .venv on pythonanywhere
-
 import logging
 from wuiw.intake import get_rss
 from wuiw.config import RSS_URL
