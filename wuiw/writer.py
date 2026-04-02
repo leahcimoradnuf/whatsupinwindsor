@@ -52,8 +52,12 @@ def review_article(draft):
 def write_article(meeting_id, text, doc_type, chunked=False):
     # TODO recieve_assignment and chunking goes here
     # TODO try logic here for exception handling
-    provider = get_provider()
-    draft = provider.summarize(text, doc_type)
+    try:
+        provider = get_provider()
+        draft = provider.summarize(text, doc_type)
+    except Exception as e:
+        return None, STATUS_FAILED, f"summarize failed: {e}"
+    
     article, status, error = review_article(draft)
     
     if status == STATUS_FAILED:
