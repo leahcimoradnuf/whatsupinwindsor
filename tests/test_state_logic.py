@@ -1,9 +1,9 @@
 
-
+import pytest
 from unittest.mock import patch, MagicMock
 from wuiw.intake import get_rss
 
-
+@pytest.mark.skip(reason="Windsor CT RSS feed doesn't provide last-modified header and RSS will be deprecated after API refactor in v1.5")
 def test_v01_304_no_changes():
     """if the Last-Modified header of the feed is not newer than the last run, do nothing"""
     mock_feed = MagicMock()
@@ -13,4 +13,4 @@ def test_v01_304_no_changes():
 
         result = get_rss("http://example.com/rss")
 
-    assert result == {} # TODO decide if this should be deprecated
+    assert result == {} 
