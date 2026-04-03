@@ -54,6 +54,7 @@ def db_conn():
         byline TEXT,
         doc_type TEXT,
         summary JSONB,
+        reviewed BOOLEAN DEFAULT FALSE,
         UNIQUE (meeting_id, doc_type));"""
         )
     conn.commit()
