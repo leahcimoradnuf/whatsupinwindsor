@@ -30,6 +30,23 @@ def index():
     sorted_articles = sorted(articles, key=lambda item: item['meeting_date'], reverse=True)
     return render_template("index.html", articles=sorted_articles)
 
+@app.route("/articles")
+def article_index():
+    conn = get_db_connection()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cur.execute("""
+                SELECT articles.summary, articles.meeting_date, assignments.materials FROM articles
+                JOIN assignments ON articles.meeting_id = assignments.meeting_id;
+                """)
+    articles = cur.fetchall()
+    cur.close()
+    conn.close()
+    for article in articles:
+        article["meeting_date"] = article["meeting_date"].strftime("%Y-%m-%d")
+
+    sorted_articles = sorted(articles, key=lambda item: item['meeting_date'], reverse=True)
+    return render_template("article_list.html", articles=sorted_articles)
+
 @app.route("/articles/<meeting_id>")
 def article(meeting_id):
     # render single article
@@ -59,8 +76,12 @@ def report_error():
 
 @app.route("/about")
 def about():
-    abort(404)
+    return render_template("about.html")
 
 @app.route("/support")
 def support():
-    abort(404)
+    return render_template("support.html")
+
+@app.route("/contact")
+def contact():
+    return render_template("contact.html")

@@ -1,8 +1,3 @@
-<!DOCTYPE html>
-<head>
-    <title>What's up in Windsor</title>
-</head>
-<body>
 {% extends "base.html" %}
     {% block content %}
     <article>
@@ -15,11 +10,18 @@
             {% endfor %}
         </ul>
         <p>{{ article['summary']['blurb'] }}</p>
-        <a href= "{{ article['materials'] }}">Link to original documents</a>
-        <br>
-        <a href="/report-error">Spot an error? Let me know!</a>
+        <div class="article-links">
+            <a href= "{{ article['materials'] }}" target="_blank">Original Documents</a>
+            <a href="/report-error">Report Error</a>
+        </div>
+        <footer>
+            This is an automated summary of a public document and is not an official town record. For official meeting minutes, see the link above.
+            {% if article['reviewed'] %}
+                This article has been human-reviewed.
+            {% else %}
+                This article has not yet been human-reviewed
+            {% endif %}
+        </footer>
         <hr>
     </article>
     {% endblock %}
-</body>
-</html>
