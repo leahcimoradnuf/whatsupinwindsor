@@ -1,0 +1,75 @@
+:root {
+    --bg: #f9f6f0;
+    --text: #1a1a1a;
+    --accent: #1a3a5c;
+    --link: #1a6b61;
+    --link_clicked: #3d5c59;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg: #1a1a1a;
+        --text: #e8e4dc;
+        --accent: #7aafd4;
+    }
+}
+@media (min-width: 600px) {
+    /* Adjust the value (600px) based on when you want the max-width to stop changing */
+    body {
+        max-width: 800px; /* Set a fixed maximum width beyond a certain device width */
+        margin-left: auto;
+        margin-right: auto;
+    }
+}
+
+* {
+    font-family: "Georgia"
+}
+
+body {
+    background-color: var(--bg);
+    color: var(--text);
+}
+
+hr {
+    border: 1px solid #808080; /* Set the color and style of the line */
+    margin: 20px 0; /* Adjust the margin as needed */
+    background-color: var(--bg)
+}
+
+a {
+    color:#1a6b61;
+    font-family: "system-ui";
+    font-style: bold;
+}
+
+a:visited {
+    color:#3d5c59;
+}
+
+footer {
+    font-style: italic;
+    font-size: 11px;
+    margin: 20px
+}
+
+li {
+    margin-bottom: 2px;
+}
+
+aside {
+    font-style: italic;
+    text-align: center;
+}
+
+nav a {
+    text-decoration: none;
+    margin-right: 1.2rem;
+    font-weight: bold;
+}
+
+.article-links {
+    display: flex;
+    gap: 1rem;
+    font-size: 14px;
+}
