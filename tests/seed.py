@@ -92,7 +92,7 @@ articles = [
 ]
 
 # add to database
-# save_assignments(assignments)
+save_assignments(assignments)
 try:
     save_articles(articles)
     print("articles saved")

@@ -50,8 +50,8 @@ def review_article(draft):
 
 # Main routine of writer.py
 def write_article(meeting_id, text, doc_type, chunked=False):
-    # TODO recieve_assignment and chunking goes here
-    # TODO try logic here for exception handling
+    """Pass document text along to AI Provider
+    doc_type: dictates prompt (minutes, agenda, voting grid)"""
     try:
         provider = get_provider()
         draft = provider.summarize(text, doc_type)
