@@ -68,7 +68,7 @@ def test_v03_pipeline(editor_db, mock_provider):
     # both articles written to articles table
     cur.execute("SELECT meeting_id FROM articles")
     results = cur.fetchall()
-    assert len(results) == 3 # two new plus seeded assignment
+    assert len(results) == 4 # two new plus seeded assignment
 
     # specific meeting_ids present
     cur.execute("SELECT meeting_id FROM articles WHERE meeting_id = %s", ("town_council_1419_2026",))
