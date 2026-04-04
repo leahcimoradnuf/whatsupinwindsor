@@ -85,3 +85,7 @@ def support():
 @app.route("/contact")
 def contact():
     return render_template("contact.html")
+
+@app.route("/signup")
+def signup():
+    return render_template("signup.html")

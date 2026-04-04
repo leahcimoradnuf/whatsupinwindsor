@@ -34,7 +34,8 @@ body {
 hr {
     border: 1px solid #808080; /* Set the color and style of the line */
     margin: 20px 0; /* Adjust the margin as needed */
-    background-color: var(--bg)
+    background-color: var(--bg);
+    color: var(--text);
 }
 
 a {
@@ -60,6 +61,7 @@ li {
 aside {
     font-style: italic;
     text-align: center;
+    font-size: 20px;
 }
 
 nav a {
@@ -72,4 +74,19 @@ nav a {
     display: flex;
     gap: 1rem;
     font-size: 14px;
+}
+
+table {
+    border-collapse: collapse;
+    margin: 1rem 0;
+}
+
+th, td {
+    border: 1px solid #808080;
+    padding: 0.4rem 1rem;
+    text-align: left;
+}
+
+th {
+    font-weight: bold;
 }
