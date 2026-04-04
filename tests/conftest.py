@@ -5,7 +5,10 @@ import subprocess
 import time
 import os
 import psycopg2
+import json
 from unittest.mock import patch, MagicMock
+from wuiw.app import app
+from tests.seed import SeedData
 
 # Classes
 
@@ -67,12 +70,25 @@ def db_conn():
 
 @pytest.fixture
 def seeded_db(db_conn):
+    data = SeedData()
     cur = db_conn.cursor()
-    cur.execute(
-        """INSERT INTO assignments (meeting_id, meeting_type, body, published_date, materials, status)
-        VALUES (%s, %s, %s, %s, %s, %s)""",
-        ("town_council_1263_2026", "Regular Meeting", "Town Council", "2026-01-20", "http://link/to/html", "pending")
-    )
+    for assignment in data.assignments:
+        cur.execute(
+            """INSERT INTO assignments (meeting_id, meeting_type, body, published_date, materials, status)
+            VALUES (%s, %s, %s, %s, %s, %s)""",
+            (assignment["meeting_id"], assignment["meeting_type"], assignment["body"], assignment["published_date"], assignment["materials"], "pending")
+        )
+    for article in data.articles:
+        cur.execute(
+            """
+            INSERT INTO articles (meeting_id, meeting_date, byline, doc_type, summary, reviewed)
+            VALUES  (%s, %s, %s, %s, %s, FALSE)
+            ON CONFLICT (meeting_id, doc_type) DO UPDATE SET
+                summary = EXCLUDED.summary,
+                meeting_date = EXCLUDED.meeting_date
+            """,
+            (article['meeting_id'], article['meeting_date'], article['byline'], article["doc_type"], json.dumps(article['summary']))
+        )
     db_conn.commit()
     yield db_conn
 
@@ -88,3 +104,16 @@ def mock_provider():
         provider = MagicMock()
         mock_get.return_value = provider
         yield provider
+
+@pytest.fixture
+def client():
+    app.config["TESTING"] = True
+    with app.test_client() as client:
+        yield client
+
+@pytest.fixture
+def empty_client(db_conn):
+    app.config["TESTING"] = True
+    with patch("wuiw.app.get_db_connection", return_value=db_conn):
+        with app.test_client() as client:
+            yield client

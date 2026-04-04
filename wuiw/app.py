@@ -6,7 +6,6 @@ from wuiw.config import get_db_connection
 
 app = Flask(__name__)
 
-@app.route("/home")
 @app.route("/")
 def index():
     conn = get_db_connection()
