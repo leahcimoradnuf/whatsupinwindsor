@@ -34,8 +34,7 @@ def article_index():
     conn = get_db_connection()
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     cur.execute("""
-                SELECT articles.summary, articles.meeting_date, assignments.materials FROM articles
-                JOIN assignments ON articles.meeting_id = assignments.meeting_id;
+                SELECT summary, meeting_date, meeting_id FROM articles;
                 """)
     articles = cur.fetchall()
     cur.close()

@@ -1,6 +1,6 @@
 {% extends "base.html" %}
     {% block content %}
         {% for article in articles %}
-            <p><a href="{{  article['materials']  }}" target="_blank">{{  article['meeting_date']  }}</a> -- {{  article['summary']['headline']  }}</p>
+            <p><a href="/articles/{{  article['meeting_id']  }}">{{  article['meeting_date']  }}</a> -- {{  article['summary']['headline']  }}</p>
         {% endfor %}
     {% endblock %}
