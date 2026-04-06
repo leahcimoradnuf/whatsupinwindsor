@@ -92,3 +92,10 @@ def save_articles(articles):
     finally:
         cur.close()
         conn.close()
+
+def record_intake(id, start, stop, status, new_assignments, failed_assignments, error=None):
+    pass
+
+def get_last_run_id():
+    """SQL query to read most recent run id from intake_records. Run at beginning of main()"""
+    pass
