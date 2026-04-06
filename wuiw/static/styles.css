@@ -11,6 +11,8 @@
         --bg: #1a1a1a;
         --text: #e8e4dc;
         --accent: #7aafd4;
+        --link: #2cac9d;
+        --link_clicked: #608884;
     }
 }
 @media (min-width: 600px) {
