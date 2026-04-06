@@ -8,29 +8,31 @@
     <!-- Add any additional meta tags, stylesheets, or scripts here -->
 </head>
 <body>
-    
-
-    <div class="head">
-        <img class="town-hall" src="/static/towncouncil.svg" alt="Windsor Town Hall">
-        <h1>What's Up In Windsor</h1>
-        <p>Easy to understand, auto-generated synopsis of what the local government is up to in Windsor, CT.</p>
-        <nav>
-            <a href="/about">About</a>
-            <a href="/">Home</a>
-            <a href="/contact">Contact</a>
-            <a href="/support">Support</a>
-            <a href="/articles">Index</a>
-            <a href="/signup">Newsletter</a>
-        </nav>
-        <hr>
+    <!-- <div class="container"> -->
+        <div class="head">
+            <a href="/">
+                <img class="town-hall" src="/static/towncouncil.svg" alt="Windsor Town Hall">
+            </a>
+            <h1>What's Up In Windsor</h1>
+            <p>Easy to understand, auto-generated synopsis of what the local government is up to in Windsor, CT.</p>
+            <nav>
+                <a href="/about">About</a>
+                <a href="/">Home</a>
+                <!-- <a href="/contact">Contact</a> -->
+                <a href="/support">Support</a>
+                <a href="/articles">Index</a>
+                <a href="/signup">Newsletter</a>
+            </nav>
+            <hr>
+        <!-- </div> -->
     </div>
 
     {% block content %}
     {% endblock %}
     
-    <footer>
+    <footer class="site-footer">
         <!-- Footer content, such as copyright information or additional links -->
-        <p>&copy; 2026 Whats Up In Windsor.</p>
+        <p>&copy; 2026 Whats Up In Windsor. | Contact: mike@whatsupinwindsor.com</p>
     </footer>
 
 </body>

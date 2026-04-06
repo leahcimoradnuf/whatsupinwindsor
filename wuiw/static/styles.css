@@ -35,6 +35,9 @@
 body {
     background-color: var(--bg);
     color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 
 hr {
@@ -102,4 +105,8 @@ th {
     margin-left: auto;
     margin-right: auto;
     width: 30%;
+}
+
+.site-footer {
+    margin-top: auto;
 }
