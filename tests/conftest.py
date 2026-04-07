@@ -46,6 +46,9 @@ def db_conn():
         body TEXT,
         published_date DATE,
         materials TEXT,
+        last_run_id INT,
+        documents_summarized INT,
+        documents_available INT,
         status TEXT DEFAULT 'pending',
         error_message TEXT);"""
         )
@@ -60,6 +63,17 @@ def db_conn():
         reviewed BOOLEAN DEFAULT FALSE,
         UNIQUE (meeting_id, doc_type));"""
         )
+    cur.execute(
+        """CREATE TABLE IF NOT EXISTS intake_records (
+        id SERIAL PRIMARY KEY,
+        run_started_at TIMESTAMP,
+        run_completed_at TIMESTAMP,
+        status TEXT,
+        new_assignments INT,
+        failed_assignments INT,
+        error_message TEXT);
+        """
+    )
     conn.commit()
     yield UnclosableConnection(conn)
     cur.execute("DROP TABLE articles")

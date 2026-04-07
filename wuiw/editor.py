@@ -93,8 +93,22 @@ def save_articles(articles):
         cur.close()
         conn.close()
 
-def record_intake(id, start, stop, status, new_assignments, failed_assignments, error=None):
-    pass
+def record_intake(start, stop, status, new_assignments, failed_assignments, error=None):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        # write info to intake_records
+        cur.execute(
+            """INSERT INTO intake_records (run_started_at, run_completed_at, status, new_assignments, failed_assignments, error_message)
+            VALUES (%s, %s, %s, %s, %s, %s)""",
+            (start, stop, status, new_assignments, failed_assignments, error)
+        )
+    except Exception as e:
+        conn.rollback()
+        raise
+    finally:
+        cur.close()
+        conn.close()
 
 def get_last_run_id():
     """SQL query to read most recent run id from intake_records. Run at beginning of main()"""
