@@ -35,21 +35,6 @@ def test_v03_update_status_with_error(editor_db):
     assert second_result[0] is None
 
 def test_v03_save_new_assignments(editor_db):
-    # new_assignments = [
-    #     {
-    #         "meeting_id": "town_council_1263_2026",
-    #         "meeting_type": "Regular Meeting",
-    #         "body": "Town Council",
-    #         "published_date": "2026-01-20",
-    #         "materials": "/link/to/html"
-    #     },{
-    #         "meeting_id": "town_council_5643_2026",
-    #         "meeting_type": "Regular Meeting",
-    #         "body": "Town Council",
-    #         "published_date": "2026-01-05",
-    #         "materials": "/link/to/html"
-    #     }
-    # ]
     data = SeedData()
     new_assignments = data.assignments
 
