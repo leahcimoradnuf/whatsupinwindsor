@@ -33,6 +33,7 @@ STATUS_PENDING = "pending"
 STATUS_ASSIGNED = "assigned"
 STATUS_COMPLETE = "complete"
 STATUS_FAILED = "failed"
+STATUS_WARNING = "warning"
 
 # Journalists
 PROVIDER = os.getenv("PROVIDER") 
