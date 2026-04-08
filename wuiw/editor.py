@@ -152,3 +152,41 @@ def close_intake(run_id, stop, status, new_assignments, failed_assignments, erro
     finally:
         cur.close()
         conn.close()
+
+def save_civic_log(logs):
+    """save outgoing request logs to town servers
+    log is a list of tuples returned by civic_log.info"""
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        for log in logs:
+            cur.execute("""
+                        INSERT INTO civic_requests (run_id, timestamp, url, response_status)
+                        VALUES (%s, %s, %s, %s)""",
+                        (log[0], log[1], log[2], log[3]))
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        raise
+    finally:
+        cur.close()
+        conn.close()
+
+def save_ai_log(logs):
+    """save outgoing request logs to ai providers
+    log is a list of tuples returned by ai_log.info"""
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        for log in logs:
+            cur.execute("""
+                        INSERT INTO civic_requests (run_id, timestamp, url, response_status, input_tokens, output_tokens)
+                        VALUES (%s, %s, %s, %s, %s, %s)""",
+                        (log[0], log[1], log[2], log[3], log[4], log[5]))
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        raise
+    finally:
+        cur.close()
+        conn.close()
