@@ -114,3 +114,41 @@ def record_intake(start, stop, status, new_assignments, failed_assignments, erro
         conn.close()
 
     return last_run_id
+
+def open_intake(start):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute("""INSERT INTO intake_records (run_started_at)
+                    VALUES (%s)
+                    RETURNING id;""", (start,))
+        run_id = cur.fetchone()[0]
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        raise
+    finally:
+        cur.close()
+        conn.close()
+    
+    return run_id
+
+def close_intake(run_id, stop, status, new_assignments, failed_assignments, error=None):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute("""UPDATE intake_records
+                    SET run_completed_at = %s,
+                        status = %s,
+                        new_assignments = %s,
+                        failed_assignments = %s,
+                        error_message = %s
+                    WHERE id = %s;""",
+                    (stop, status, new_assignments, failed_assignments, error, run_id))
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        raise
+    finally:
+        cur.close()
+        conn.close()
