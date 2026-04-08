@@ -100,9 +100,12 @@ def record_intake(start, stop, status, new_assignments, failed_assignments, erro
         # write info to intake_records
         cur.execute(
             """INSERT INTO intake_records (run_started_at, run_completed_at, status, new_assignments, failed_assignments, error_message)
-            VALUES (%s, %s, %s, %s, %s, %s)""",
+            VALUES (%s, %s, %s, %s, %s, %s)
+            RETURNING id""",
             (start, stop, status, new_assignments, failed_assignments, error)
         )
+        last_run_id = cur.fetchone()[0]
+        conn.commit()
     except Exception as e:
         conn.rollback()
         raise
@@ -110,6 +113,4 @@ def record_intake(start, stop, status, new_assignments, failed_assignments, erro
         cur.close()
         conn.close()
 
-def get_last_run_id():
-    """SQL query to read most recent run id from intake_records. Run at beginning of main()"""
-    pass
+    return last_run_id

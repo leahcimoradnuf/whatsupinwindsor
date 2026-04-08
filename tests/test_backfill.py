@@ -6,7 +6,7 @@ from unittest.mock import MagicMock
 
 # Unit tests
 
-def test_v04_backfill_valid_input(monkeypatch):
+def test_v04_backfill_valid_input(monkeypatch, no_sleep_till_brooklyn):
     """Happy Path returns valid data structure"""
     mock_response = MagicMock()
     mock_response.status_code = 200
@@ -38,7 +38,7 @@ def test_v04_backfill_valid_input(monkeypatch):
     assert all(len(r["published_date"]) == 10 for r in results)
     assert all(r["published_date"][4] == "-" for r in results)
 
-def test_v04_backfill_non200_response(monkeypatch):
+def test_v04_backfill_non200_response(monkeypatch, no_sleep_till_brooklyn):
     """Non 200 Response returns empty dict and logs error"""
     mock_response = MagicMock()
     mock_response.status_code = 500
@@ -49,7 +49,7 @@ def test_v04_backfill_non200_response(monkeypatch):
 
     assert results == []
 
-def test_v04_backfill_valid_response_empty(monkeypatch):
+def test_v04_backfill_valid_response_empty(monkeypatch, no_sleep_till_brooklyn):
     """200 response valid html page has no meetings to assign, return empty dict"""
     mock_response = MagicMock()
     mock_response.status_code = 200
