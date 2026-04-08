@@ -19,7 +19,7 @@ def test_v03_transcribe_handles_unreadable_pdf():
         _transcribe_doc(pdf_stream)
 
 # Unit Test fetch_documents()
-def test_v03_non200_materials():
+def test_v03_non200_materials(no_sleep_till_brooklyn):
     """Returns: ({}, STATUS_FAILED, error_message)"""
     mock_response = MagicMock()
     mock_response.status_code = 404
@@ -31,7 +31,7 @@ def test_v03_non200_materials():
     assert status == STATUS_FAILED
     assert "404" in error
 
-def test_v03_valid_path(file_server):
+def test_v03_valid_path(file_server, no_sleep_till_brooklyn):
     """Happy path returns: (documents, STATUS_ASSIGNED, None)"""
     url = "http://localhost:8000/sample_materials.html"
     documents, status, error = fetch_documents(url)
@@ -44,7 +44,7 @@ def test_v03_valid_path(file_server):
     assert status == STATUS_ASSIGNED
     assert error is None
 
-def test_v03_skip_non200_pdf():
+def test_v03_skip_non200_pdf(no_sleep_till_brooklyn):
     """non-200 pdf stream request skips entry and continues"""
     mock_200 = MagicMock()
     mock_200.status_code = 200
@@ -70,7 +70,7 @@ def test_v03_skip_non200_pdf():
     assert status == STATUS_ASSIGNED
     assert error is None
 
-def test_v03_doc_type_returns_requested(file_server):
+def test_v03_doc_type_returns_requested(file_server, no_sleep_till_brooklyn):
     """only requested doc type is returned
     doc_type filter for type not in documents returns ({}, STATUS_FAILED, error_message)"""
     url = "http://localhost:8000/sample_materials.html"
@@ -81,7 +81,7 @@ def test_v03_doc_type_returns_requested(file_server):
     assert "minutes" in documents
 
 @pytest.mark.skip(reason="Test passed before classify(doc_type_fallback) parameter was implemented. This test now fails but that's good")
-def test_v03_unclassified_doc_type_handled(file_server):
+def test_v03_unclassified_doc_type_handled(file_server, no_sleep_till_brooklyn):
     """classify() doesn't catch 'vote' from 'Voting Grid', so it returns unclassified"""
     url = "http://localhost:8000/sample_materials.html"
     documents, status, error = fetch_documents(url)

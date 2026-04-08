@@ -39,6 +39,16 @@ def db_conn():
     conn = psycopg2.connect(os.getenv("TEST_DATABASE_URL"))
     cur = conn.cursor()
     cur.execute(
+        """CREATE TABLE IF NOT EXISTS intake_records (
+        id SERIAL PRIMARY KEY,
+        run_started_at TIMESTAMP,
+        run_completed_at TIMESTAMP,
+        status TEXT,
+        new_assignments INT,
+        failed_assignments INT,
+        error_message TEXT);"""
+    )
+    cur.execute(
         """CREATE TABLE IF NOT EXISTS assignments (
         id SERIAL PRIMARY KEY,
         meeting_id TEXT UNIQUE NOT NULL,
@@ -46,7 +56,7 @@ def db_conn():
         body TEXT,
         published_date DATE,
         materials TEXT,
-        last_run_id INT,
+        last_run_id INT REFERENCES intake_records (id),
         documents_summarized INT,
         documents_available INT,
         status TEXT DEFAULT 'pending',
@@ -63,21 +73,11 @@ def db_conn():
         reviewed BOOLEAN DEFAULT FALSE,
         UNIQUE (meeting_id, doc_type));"""
         )
-    cur.execute(
-        """CREATE TABLE IF NOT EXISTS intake_records (
-        id SERIAL PRIMARY KEY,
-        run_started_at TIMESTAMP,
-        run_completed_at TIMESTAMP,
-        status TEXT,
-        new_assignments INT,
-        failed_assignments INT,
-        error_message TEXT);
-        """
-    )
     conn.commit()
     yield UnclosableConnection(conn)
     cur.execute("DROP TABLE articles")
     cur.execute("DROP TABLE assignments")
+    cur.execute("DROP TABLE intake_records")
     conn.commit()
     cur.close()
     conn.close()
@@ -131,3 +131,8 @@ def empty_client(db_conn):
     with patch("wuiw.app.get_db_connection", return_value=db_conn):
         with app.test_client() as client:
             yield client
+
+@pytest.fixture 
+def no_sleep_till_brooklyn():
+    with patch("time.sleep"):
+        yield
