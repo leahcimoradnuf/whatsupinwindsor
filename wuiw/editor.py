@@ -1,8 +1,11 @@
 import psycopg2
 import psycopg2.extras
 import json
+import logging
 from wuiw.config import get_db_connection
 from wuiw.config import STATUS_PENDING, STATUS_ASSIGNED, STATUS_COMPLETE, STATUS_FAILED
+
+logger = logging.getLogger(__name__)
 
 def update_status(meeting_id, status, error_message=None):
     """Update status of an assignment in the database"""
@@ -160,15 +163,17 @@ def save_civic_log(logs):
     cur = conn.cursor()
     try:
         for log in logs:
-            cur.execute("""
-                        INSERT INTO civic_requests (run_id, timestamp, url, response_status)
-                        VALUES (%s, %s, %s, %s)""",
-                        (log[0], log[1], log[2], log[3]))
-        conn.commit()
-    except Exception as e:
-        conn.rollback()
-        raise
-    finally:
+            try:
+                cur.execute("""
+                            INSERT INTO civic_requests (run_id, timestamp, url, response_status)
+                            VALUES (%s, %s, %s, %s)""",
+                            (log[0], log[1], log[2], log[3]))
+                conn.commit()
+            except Exception as e:
+                conn.rollback()
+                logger.warning(f"{e}")
+                continue
+    finally:    
         cur.close()
         conn.close()
 
@@ -179,14 +184,16 @@ def save_ai_log(logs):
     cur = conn.cursor()
     try:
         for log in logs:
-            cur.execute("""
-                        INSERT INTO civic_requests (run_id, timestamp, url, response_status, input_tokens, output_tokens)
-                        VALUES (%s, %s, %s, %s, %s, %s)""",
-                        (log[0], log[1], log[2], log[3], log[4], log[5]))
-        conn.commit()
-    except Exception as e:
-        conn.rollback()
-        raise
+            try:
+                cur.execute("""
+                            INSERT INTO ai_requests (run_id, timestamp, provider, status, input_tokens, output_tokens)
+                            VALUES (%s, %s, %s, %s, %s, %s)""",
+                            (log[0], log[1], log[2], log[3], log[4], log[5]))
+                conn.commit()
+            except Exception as e:
+                conn.rollback()
+                logger.warning(f"{e}")
+                continue
     finally:
         cur.close()
         conn.close()
