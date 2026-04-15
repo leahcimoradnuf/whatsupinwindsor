@@ -136,3 +136,34 @@ def empty_client(db_conn):
 def no_sleep_till_brooklyn():
     with patch("time.sleep"):
         yield
+
+@pytest.fixture
+def mock_anthropic_client():
+  with patch("wuiw.journalist.Anthropic") as mock_anthropic:
+    mock_client = MagicMock()
+    mock_anthropic.return_value = mock_client
+    mock_response = MagicMock()
+    mock_response.usage.input_tokens = 100
+    mock_response.usage.output_tokens = 10
+    mock_response.content[0].text = '{"test": "article text"}'
+    mock_client.messages.create.return_value = mock_response
+    yield mock_response
+
+@pytest.fixture
+def mock_openai_client():
+  with patch("wuiw.journalist.OpenAI") as mock_openai:
+    mock_client = MagicMock()
+    mock_openai.return_value = mock_client
+    mock_response = MagicMock()
+    mock_response.usage.input_tokens = 100
+    mock_response.usage.output_tokens = 10
+    mock_response.choices[0].message.content = '{"test": "article text"}'
+    mock_client.messages.create.return_value = mock_response
+    yield mock_response
+
+@pytest.fixture(autouse=True)
+def reset_provider():
+    import wuiw.config as config
+    config._provider = None
+    yield
+    config._provider = None

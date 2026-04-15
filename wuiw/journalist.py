@@ -34,14 +34,21 @@ class OpenAIProvider:
         }
 
         prompt = self.prompts[doc_type] + [task]
-        response = self.client.chat.completions.create(
-            model=self.model,
-            response_format={"type": "json_object"},
-            messages=prompt
-        )
-        response_data = json.loads(response.choices[0].message.content)
 
-        return response_data
+        try:
+            response = self.client.chat.completions.create(
+                model=self.model,
+                response_format={"type": "json_object"},
+                messages=prompt
+            )
+            response_data = json.loads(response.choices[0].message.content)
+            input_tokens = response.usage.prompt_tokens
+            output_tokens = response.usage.completion_tokens
+
+            return (response_data, "OK", input_tokens, output_tokens)
+        except Exception as e:
+            logger.warning(f"AI client failed: {e}")
+            return (None, "FAIL", None, None)
     
 class AnthropicProvider:
     def __init__(self):
@@ -60,16 +67,23 @@ class AnthropicProvider:
             }
         
         prompt = self.prompts[doc_type] + [task]
-        response = self.client.messages.create(
-            model=self.model,
-            max_tokens=1024,
-            system=self.system[doc_type],
-            messages=prompt
-            )
- 
-        response_data =  json.loads(response.content[0].text)
-        
-        return response_data
+
+        try:
+            response = self.client.messages.create(
+                model=self.model,
+                max_tokens=1024,
+                system=self.system[doc_type],
+                messages=prompt
+                )
+    
+            response_data =  json.loads(response.content[0].text)
+            input_tokens = response.usage.input_tokens
+            output_tokens = response.usage.output_tokens
+
+            return (response_data, "OK", input_tokens, output_tokens)
+        except Exception as e:
+            logger.warning(f"AI client failed: {e}")
+            return (None, "FAIL", None, None)
     
 
 # Providers Registry
