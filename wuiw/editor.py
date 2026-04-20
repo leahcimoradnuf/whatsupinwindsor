@@ -2,6 +2,9 @@ import psycopg2
 import psycopg2.extras
 import json
 import logging
+import smtplib
+import os
+from email.mime.text import MIMEText
 from wuiw.config import get_db_connection
 from wuiw.config import STATUS_PENDING, STATUS_ASSIGNED, STATUS_COMPLETE, STATUS_FAILED
 
@@ -19,23 +22,24 @@ def update_status(meeting_id, status, error_message=None):
     cur.close()
     conn.close()
 
-def save_assignments(rss_assignments):
+def save_assignments(rss_assignments, run_id=None):
     """Add new assignments from intake.get_rss() to the assignments table"""
     conn = get_db_connection()
     cur = conn.cursor()
     try:
         for assignment in rss_assignments:
             cur.execute(
-                """INSERT INTO assignments (meeting_id, meeting_type, body, published_date, materials)
-                VALUES (%s, %s, %s, %s, %s)
+                """INSERT INTO assignments (meeting_id, meeting_type, body, published_date, materials, last_run_id)
+                VALUES (%s, %s, %s, %s, %s, %s)
                 ON CONFLICT (meeting_id) DO UPDATE SET
                     meeting_type=EXCLUDED.meeting_type,
                     materials=EXCLUDED.materials,
                     body=EXCLUDED.body,
                     published_date=EXCLUDED.published_date,
-                    status='pending'
+                    status='pending',
+                    last_run_id=EXCLUDED.last_run_id
                 WHERE assignments.materials != EXCLUDED.materials
-                """, (assignment['meeting_id'], assignment['meeting_type'], assignment['body'], assignment['published_date'], assignment['materials'])
+                """, (assignment['meeting_id'], assignment['meeting_type'], assignment['body'], assignment['published_date'], assignment['materials'], run_id)
                 )
         conn.commit()
     except Exception as e:
@@ -197,3 +201,21 @@ def save_ai_log(logs):
     finally:
         cur.close()
         conn.close()
+
+def send_alert(error):
+    sender = os.getenv("ALERT_EMAIL")
+    password = os.getenv("ALERT_EMAIL_PASSWORD")
+    recipient = os.getenv("ALERT_EMAIL")  # send to yourself
+
+    msg = MIMEText(f"WUIW pipeline failed.\n\nError: {error}")
+    msg["Subject"] = "WUIW Pipeline Failure"
+    msg["From"] = sender
+    msg["To"] = recipient
+
+    try:
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+            server.login(sender, password)
+            server.sendmail(sender, recipient, msg.as_string())
+        logger.info("Failure alert sent")
+    except Exception as e:
+        logger.error("Failed to send alert: %s", e)

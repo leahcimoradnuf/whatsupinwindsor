@@ -94,10 +94,10 @@ class SeedData:
         ]
 
 # add to database
-data = SeedData()
-save_assignments(data.assignments)
-try:
-    save_articles(data.articles)
-    print("articles saved")
-except Exception as e:
-    print(f"articles not saved: {e}")
+# data = SeedData()
+# save_assignments(data.assignments)
+# try:
+#     save_articles(data.articles)
+#     print("articles saved")
+# except Exception as e:
+#     print(f"articles not saved: {e}")

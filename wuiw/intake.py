@@ -9,12 +9,15 @@ import time
 from wuiw.config import USER_AGENT, HEADERS, MUNICIPAL_BODIES, MEETING_TYPES, REQUEST_DELAY
 from wuiw.util import classify
 from bs4 import BeautifulSoup
+from wuiw.log import civic_log
+# from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
 def get_rss(rss_url):
    
     feed = feedparser.parse(rss_url, agent=USER_AGENT, modified=None)
+    civic_log.record(datetime.datetime.now(), rss_url, feed.status)
 
     if feed.status == 304:
         logger.info("STATUS: %s; No updates", feed.status)

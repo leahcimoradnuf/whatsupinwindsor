@@ -101,15 +101,16 @@ def test_review_bullets_not_list():
     assert reviewed[2] == "bullets is not a list"
 
 def test_write_returns_valid_tuple(mock_provider):
-    mock_provider.summarize.return_value = {
+    mock_provider.summarize.return_value = ({
         "meeting_date": "2026-01-20",
         "headline": "Test Headline",
         "bullets": ["bullet 1", "bullet 2"],
         "blurb": "Test blurb"
-    }
+    }, "OK", 1000, 100)
     mock_provider.model = "gpt-4o-mini"
     
     result = write_article("town_council_1234_2026", "raw text", "minutes")
+    print(result[2])
     assert result[1] == STATUS_COMPLETE
     assert result[2] == None
     assert result[0]["meeting_id"] == "town_council_1234_2026"

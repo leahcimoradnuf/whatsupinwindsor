@@ -63,6 +63,24 @@ def db_conn():
         error_message TEXT);"""
         )
     cur.execute(
+        """CREATE TABLE IF NOT EXISTS civic_requests (
+        id SERIAL PRIMARY KEY,
+        run_id INT REFERENCES intake_records (id),
+        timestamp TIMESTAMP,
+        url TEXT,
+        response_status INT);"""
+    )
+    cur.execute(
+        """CREATE TABLE IF NOT EXISTS ai_requests (
+        id SERIAL PRIMARY KEY,
+        run_id INT REFERENCES intake_records (id),
+        timestamp TIMESTAMP,
+        provider TEXT,
+        status TEXT,
+        input_tokens INT,
+        output_tokens INT);"""
+    )
+    cur.execute(
         """CREATE TABLE IF NOT EXISTS articles (
         id SERIAL PRIMARY KEY,
         meeting_id TEXT UNIQUE NOT NULL,
@@ -76,6 +94,8 @@ def db_conn():
     conn.commit()
     yield UnclosableConnection(conn)
     cur.execute("DROP TABLE articles")
+    cur.execute("DROP TABLE ai_requests")
+    cur.execute("DROP TABLE civic_requests")
     cur.execute("DROP TABLE assignments")
     cur.execute("DROP TABLE intake_records")
     conn.commit()
@@ -117,6 +137,7 @@ def mock_provider():
     with patch("wuiw.writer.get_provider") as mock_get:
         provider = MagicMock()
         mock_get.return_value = provider
+        provider.summarize.return_value = ({"headline": "Test", "bullets": ["item"], "blurb": "Blurb", "meeting_date": "2026-04-20"}, "OK", 100, 10)
         yield provider
 
 @pytest.fixture
@@ -145,7 +166,7 @@ def mock_anthropic_client():
     mock_response = MagicMock()
     mock_response.usage.input_tokens = 100
     mock_response.usage.output_tokens = 10
-    mock_response.content[0].text = '{"test": "article text"}'
+    mock_response.content[0].text = '{"headline": "Test", "bullets": ["item"], "blurb": "Blurb", "meeting_date": "2026-04-20"}'
     mock_client.messages.create.return_value = mock_response
     yield mock_response
 
@@ -167,3 +188,32 @@ def reset_provider():
     config._provider = None
     yield
     config._provider = None
+
+@pytest.fixture
+def mock_feedparser():
+    mock_feed = MagicMock()
+    mock_feed.status = 200
+    mock_feed.modified_parsed = None
+    mock_feed.entries = [
+        {
+            "id": "http://www.windsorct.gov/AgendaCenter/1419/",
+            "title": "Town Council Regular Meeting",
+            "published_parsed": time.strptime("2026-01-15", "%Y-%m-%d")
+        },
+        {
+            "id": "http://www.windsorct.gov/AgendaCenter/5643/",
+            "title": "Flying Spaghetti Monster Club",
+            "published_parsed": time.strptime("2025-01-10", "%Y-%m-%d")
+        }
+    ] 
+    with patch("wuiw.intake.feedparser.parse", return_value=mock_feed):
+        yield mock_feed
+
+@pytest.fixture
+def mock_request():
+    mock_response = MagicMock()
+    mock_response.text = open("tests/fixtures/sample_materials.html", "r").read() 
+    mock_response.content = open("tests/fixtures/sample_minutes.pdf", "rb").read()
+    mock_response.status_code = 200
+    with patch("wuiw.reporter.requests.get", return_value=mock_response):
+        yield mock_response

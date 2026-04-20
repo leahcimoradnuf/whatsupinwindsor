@@ -5,6 +5,7 @@ from wuiw.intake import get_rss
 from wuiw.editor import save_assignments, save_articles, assign, update_status
 from wuiw.writer import write_article
 from wuiw.config import STATUS_ASSIGNED
+from wuiw.main import main
 
 def test_v03_pipeline(editor_db, mock_provider):
     # 1. mock get_rss() return
@@ -39,13 +40,13 @@ def test_v03_pipeline(editor_db, mock_provider):
             STATUS_ASSIGNED,
             None
         )
-        mock_provider.summarize.return_value = {
+        mock_provider.summarize.return_value = ({
                     "meeting_date": "2026-01-20",
                     "doc_type": "minutes",
                     "headline": "Test Headline",
                     "bullets": ["bullet 1", "bullet 2"],
                     "blurb": "Test blurb"
-                }
+                }, "OK", 1000, 100)
         mock_provider.model = "gpt-4o-mini"
         
         for assignment in assignments:
@@ -83,3 +84,65 @@ def test_v03_pipeline(editor_db, mock_provider):
 
     cur.execute("SELECT status FROM assignments WHERE meeting_id = %s", ("unclassified_5643_2025",))
     assert cur.fetchone()[0] == "complete"
+
+def test_v06_pipeline(editor_db, mock_feedparser, mock_request, mock_anthropic_client, no_sleep_till_brooklyn):
+    """run main with all outgoing http/rss/sdk requests patched"""
+    # first run
+    main()
+    
+    # assertions
+    # run_id = 1 across tables
+    cur = editor_db.cursor()
+    cur.execute("SELECT id FROM intake_records")
+    result =  cur.fetchone()
+    assert len(result) ==1
+    assert result[0] == 1
+
+    cur.execute("SELECT run_id FROM civic_requests")
+    assert cur.fetchone()[0] == 1
+
+    cur.execute("SELECT run_id FROM ai_requests")
+    assert cur.fetchone()[0] == 1
+
+    cur.execute("SELECT last_run_id FROM assignments WHERE meeting_id = %s", ("town_council_1419_2026",))
+    assert cur.fetchone()[0] == 1
+
+    # second run
+    main()
+
+    # # assertions
+    # run_id 2 added, run 1 not overwritten
+    cur.execute("SELECT id FROM intake_records")
+    result2 = cur.fetchall()
+    assert len(result2) == 2
+    # print(f"{result2 = }")
+    assert result2[0][0] == 1
+    assert result2[1][0] == 2
+
+    cur.execute("SELECT run_id FROM civic_requests")
+    civic_result = cur.fetchall()
+    # print(f"{civic_result = }")
+    # expected result: [(1,), (1,), (1,), (1,), (1,), (2,)]
+    assert civic_result[0][0] == 1 # first rss ping finds two assignment packets
+    assert civic_result[1][0] == 1 # first materials.html request
+    assert civic_result[2][0] == 1 # first pdf request
+    assert civic_result[3][0] == 1 # second materials.html request
+    assert civic_result[4][0] == 1 # second pdf request
+    assert civic_result[5][0] == 2 # rss ping on run 2 finds no new rss entries, no further requests expected
+
+    cur.execute("SELECT run_id FROM ai_requests")
+    ai_result = cur.fetchall()
+    # print(f"{ai_result = }")
+    # expected result: [(1,), (1,)]
+    assert ai_result[0][0] == 1 # ai summary request for first article in run 1
+    assert ai_result[1][0] == 1 # ai summary request for second article in run 1
+    # no summaries in run 2 because get_rss() finds no new leads
+
+    cur.execute("SELECT last_run_id FROM assignments")
+    assignment_results = cur.fetchall()
+    # print(f"{assignment_results = }")
+    # expected result: [(None,), (None,), (1,), (1,)]
+    assert assignment_results[0][0] == None # manually seeded entry not tied to scraper run
+    assert assignment_results[1][0] == None # manually seeded entry not tied to scraper run
+    assert assignment_results[2][0] == 1 # assignment found in run one and unchanged by run 2
+    assert assignment_results[3][0] == 1 # assignment found in run one and unchanged by run 2

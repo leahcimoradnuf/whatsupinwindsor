@@ -2,6 +2,7 @@
 import logging
 from datetime import datetime
 from wuiw.config import get_provider, STATUS_FAILED, STATUS_COMPLETE
+from wuiw.log import ai_log
 
 logger = logging.getLogger(__name__)
 
@@ -54,8 +55,10 @@ def write_article(meeting_id, text, doc_type, chunked=False):
     doc_type: dictates prompt (minutes, agenda, voting grid)"""
     try:
         provider = get_provider()
-        draft = provider.summarize(text, doc_type)
+        draft, client_status, input_tokens, output_tokens = provider.summarize(text, doc_type)
+        ai_log.record(datetime.now(), provider.model, client_status, input_tokens, output_tokens)
     except Exception as e:
+        ai_log.record(datetime.now(), provider.model, "FAIL", None, None)
         return None, STATUS_FAILED, f"summarize failed: {e}"
     
     article, status, error = review_article(draft)
