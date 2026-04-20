@@ -3,7 +3,7 @@ import pytest
 import psycopg2.extras
 from datetime import datetime
 from unittest.mock import MagicMock, patch
-from wuiw.editor import update_status, save_assignments, record_intake, open_intake, close_intake, save_ai_log, save_civic_log, send_alert
+from wuiw.editor import update_status, save_assignments, open_intake, close_intake, save_ai_log, save_civic_log, send_alert
 from wuiw.config import STATUS_PENDING, STATUS_ASSIGNED, STATUS_COMPLETE, STATUS_FAILED, PROVIDER
 from tests.seed import SeedData
 from wuiw.log import ai_log, civic_log
@@ -89,27 +89,6 @@ def test_v03_unchanged_assignment_preserves_status(editor_db):
     cur = editor_db.cursor()
     cur.execute("SELECT status FROM assignments WHERE meeting_id = %s", ("town_council_1263_2026",))
     assert cur.fetchone()[0] == "complete"
-
-@pytest.mark.skip(reason="record_intake() deprecated, use open_intake() and close_intake() for separation of concerns")
-def test_v06_valid_entry(editor_db):
-    start = datetime.now()
-    time.sleep(1)
-    end = datetime.now()
-    result = record_intake(start, end, STATUS_COMPLETE, 3, 0)
-    cur = editor_db.cursor()
-    cur.execute("SELECT * FROM intake_records;")
-    rows = cur.fetchall()
-    cur.close()
-
-    assert result == 1
-    assert len(rows) == 1
-    row = rows[0]
-    assert row[1] == start
-    assert row[2] == end
-    assert row[3] == STATUS_COMPLETE
-    assert row[4] == 3
-    assert row[5] == 0
-    assert row[6] == None
 
 def test_v06_open_valid_entry(editor_db):
     start = datetime.now()

@@ -85,7 +85,7 @@ def test_v03_pipeline(editor_db, mock_provider):
     cur.execute("SELECT status FROM assignments WHERE meeting_id = %s", ("unclassified_5643_2025",))
     assert cur.fetchone()[0] == "complete"
 
-def test_v06_pipeline(editor_db, mock_feedparser, mock_request, mock_anthropic_client, no_sleep_till_brooklyn):
+def test_v06_pipeline(editor_db, mock_feedparser, mock_request, mock_anthropic_client, no_sleep_till_brooklyn, mock_email):
     """run main with all outgoing http/rss/sdk requests patched"""
     # first run
     main()

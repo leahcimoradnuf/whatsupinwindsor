@@ -1,6 +1,4 @@
 # module for reading and parsing RSS feeds
-import json
-import os
 import feedparser
 import logging
 import datetime

@@ -6,7 +6,7 @@ import smtplib
 import os
 from email.mime.text import MIMEText
 from wuiw.config import get_db_connection
-from wuiw.config import STATUS_PENDING, STATUS_ASSIGNED, STATUS_COMPLETE, STATUS_FAILED
+from wuiw.config import STATUS_ASSIGNED
 
 logger = logging.getLogger(__name__)
 
@@ -99,28 +99,6 @@ def save_articles(articles):
     finally:
         cur.close()
         conn.close()
-
-def record_intake(start, stop, status, new_assignments, failed_assignments, error=None):
-    conn = get_db_connection()
-    cur = conn.cursor()
-    try:
-        # write info to intake_records
-        cur.execute(
-            """INSERT INTO intake_records (run_started_at, run_completed_at, status, new_assignments, failed_assignments, error_message)
-            VALUES (%s, %s, %s, %s, %s, %s)
-            RETURNING id""",
-            (start, stop, status, new_assignments, failed_assignments, error)
-        )
-        last_run_id = cur.fetchone()[0]
-        conn.commit()
-    except Exception as e:
-        conn.rollback()
-        raise
-    finally:
-        cur.close()
-        conn.close()
-
-    return last_run_id
 
 def open_intake(start):
     conn = get_db_connection()
