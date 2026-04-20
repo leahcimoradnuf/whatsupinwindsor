@@ -2,9 +2,10 @@ import logging
 from datetime import datetime
 from wuiw.intake import get_rss
 from wuiw.config import RSS_URL, STATUS_COMPLETE, STATUS_WARNING, STATUS_FAILED
-from wuiw.editor import save_articles, save_assignments, update_status, assign, open_intake, close_intake
+from wuiw.editor import save_articles, save_assignments, update_status, assign, open_intake, close_intake, save_ai_log, save_civic_log, send_alert
 from wuiw.reporter import fetch_documents
 from wuiw.writer import write_article
+from wuiw.log import ai_log, civic_log
 
 logging.basicConfig(
     level=logging.INFO,
@@ -24,9 +25,13 @@ def main():
     failed_assignments = 0
     status = STATUS_FAILED
     error = None
+    ai_log.reset()
+    civic_log.reset()
 
     try:
         run_id = open_intake(datetime.now())
+        ai_log.set_run_id(run_id)
+        civic_log.set_run_id(run_id)
         logger.info("WUIW pipeline started")
 
         # Fetch RSS feed
@@ -41,7 +46,7 @@ def main():
         logger.info(f"RSS fetch returned {len(new_leads)} new leads")
         
         # Enter new assignments to db table: assignments
-        save_assignments(new_leads)
+        save_assignments(new_leads, run_id=run_id)
         logger.info(f"Assignments saved")
 
         # Compile a list of pending assignments
@@ -93,10 +98,17 @@ def main():
         error = "WUIW pipeline failed, see logs for details"
         logger.error("WUIW pipeline failed. Error: %s", e)
     finally:
+        # log http/api requests
+        save_civic_log(civic_log.info)
+        save_ai_log(ai_log.info)
+
         if not run_id:
             logger.warning("WUIW pipeline not captured in intake_records. It may not have succeeded. Check logs for details.")
         else:
             close_intake(run_id, datetime.now(), status, new_assignments, failed_assignments, error=error)
+        
+        if status == STATUS_FAILED:
+            send_alert(error)
         
 
 if __name__ == "__main__":

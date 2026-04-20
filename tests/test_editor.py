@@ -3,9 +3,10 @@ import pytest
 import psycopg2.extras
 from datetime import datetime
 from unittest.mock import MagicMock, patch
-from wuiw.editor import update_status, save_assignments, record_intake, open_intake, close_intake
-from wuiw.config import STATUS_PENDING, STATUS_ASSIGNED, STATUS_COMPLETE, STATUS_FAILED
+from wuiw.editor import update_status, save_assignments, record_intake, open_intake, close_intake, save_ai_log, save_civic_log, send_alert
+from wuiw.config import STATUS_PENDING, STATUS_ASSIGNED, STATUS_COMPLETE, STATUS_FAILED, PROVIDER
 from tests.seed import SeedData
+from wuiw.log import ai_log, civic_log
 
 def test_db_fixture(db_conn):
     cur = db_conn.cursor()
@@ -148,3 +149,53 @@ def test_v06_close_valid_entry(editor_db):
     assert row["new_assignments"] == 3
     assert row["failed_assignments"] == 0
     assert row["error_message"] == None
+
+def test_v06_write_http_request_logs(editor_db):
+    """test that ai_log and civic_log data are written to the database by save_civic_log and save_ai_log"""
+    start = datetime.now()
+    run_id = open_intake(start)
+    ai_log.reset()
+    ai_log.set_run_id(1)
+    ai_log.record(datetime.now(), PROVIDER, "OK", 1000, 100)
+    ai_log.record(datetime.now(), PROVIDER, "OK", 2000, 100)
+    ai_log.record(datetime.now(), PROVIDER, "FAIL", None, None)
+
+    civic_log.reset()
+    civic_log.set_run_id(1)
+    civic_log.record(datetime.now(), "http://link/to/stuff", 200)
+    civic_log.record(datetime.now(), "http://broken/link/to/stuff", 404)
+
+    save_ai_log(ai_log.info)
+    save_civic_log(civic_log.info)
+
+    cur = editor_db.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cur.execute("""SELECT * FROM ai_requests""")
+    ai_result = cur.fetchall()
+    cur.execute("""SELECT * FROM civic_requests""")
+    civic_result = cur.fetchall()
+    cur.close()
+
+    for entry in [ai_result[0], civic_result[0]]:
+        assert isinstance(entry["timestamp"], datetime)
+
+    assert ai_result[1]["provider"] == "Anthropic"
+    assert ai_result[1]["status"] == "OK"
+    assert ai_result[1]["input_tokens"] == 2000
+    assert ai_result[1]["output_tokens"] == 100
+    assert ai_result[2]["status"] == "FAIL"
+    assert ai_result[2]["input_tokens"] is None
+
+    assert civic_result[0]["url"] == "http://link/to/stuff"
+    assert civic_result[0]["response_status"] == 200
+    assert civic_result[1]["response_status"] == 404
+
+def test_v06_send_alert(no_sleep_till_brooklyn):
+    with patch("wuiw.editor.smtplib.SMTP_SSL") as mock_smtp:
+        mock_server = MagicMock()
+        mock_smtp.return_value.__enter__ = MagicMock(return_value=mock_server)
+        mock_smtp.return_value.__exit__ = MagicMock(return_value=False)
+        
+        send_alert("test error")
+        
+        mock_server.login.assert_called_once()
+        mock_server.sendmail.assert_called_once()

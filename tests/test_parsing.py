@@ -1,6 +1,8 @@
 from wuiw.intake import get_rss, classify
 from unittest.mock import MagicMock, patch
 from wuiw.config import MUNICIPAL_BODIES
+from wuiw.log import civic_log
+from datetime import datetime
 
 def test_v01_bad_entries_handled():
     """
@@ -71,4 +73,32 @@ def test_v01_classify_body():
 
     assert bodies == ["town council", "town council", "planning commission", "unclassified"]
 
+def test_v06_get_rss_records_civic_log():
+    civic_log.reset()
+    civic_log.set_run_id(1)
 
+    mock_feed = MagicMock()
+    mock_feed.status = 200
+    mock_feed.modified_parsed = None
+    mock_feed.entries = [
+        {
+            "id": "http://www.windsorct.gov/AgendaCenter/1419/",
+            "title": "Town Council Regular Meeting",
+            "published_parsed": (2026, 1, 15, 0, 0, 0)
+        },
+        {
+            "id": "http://www.windsorct.gov/AgendaCenter/5643/",
+            "title": "Flying Spaghetti Monster Club",
+            "published_parsed": (2025, 10, 1, 0, 0, 0)
+        }
+    ]
+
+    with patch("wuiw.intake.feedparser.parse", return_value=mock_feed):
+        
+        response = get_rss("http://example.com/rss")
+
+    result = civic_log.info[0]
+    assert result[0] == 1 # run_id
+    assert isinstance(result[1], datetime)
+    assert result[2] == "http://example.com/rss"
+    assert result[3] == 200

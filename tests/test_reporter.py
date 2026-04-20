@@ -3,6 +3,8 @@ import pytest
 from wuiw.reporter import _transcribe_doc, fetch_documents
 from unittest.mock import patch, MagicMock
 from wuiw.config import STATUS_FAILED, STATUS_ASSIGNED
+from wuiw.log import civic_log
+from datetime import datetime
 
 # Unit Test _transcribe_doc()
 def test_v03_transcribe_successful():
@@ -88,3 +90,15 @@ def test_v03_unclassified_doc_type_handled(file_server, no_sleep_till_brooklyn):
     
     assert "unclassified" in documents
 
+def test_v06_reporter_records_civic_log(file_server, no_sleep_till_brooklyn):
+    civic_log.reset()
+    civic_log.set_run_id(1)
+    
+    url = "http://localhost:8000/sample_materials.html"
+    documents, status, error = fetch_documents(url)
+
+    result = civic_log.info[0]
+    assert result[0] == 1 # run_id
+    assert isinstance(result[1], datetime)
+    assert result[2] == url
+    assert result[3] == 200

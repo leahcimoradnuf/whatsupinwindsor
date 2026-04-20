@@ -7,6 +7,8 @@ from bs4 import BeautifulSoup
 from logging import getLogger
 from wuiw.util import classify
 from wuiw.config import DOCUMENT_TYPES, HEADERS, STATUS_ASSIGNED, STATUS_FAILED, REQUEST_DELAY
+from wuiw.log import civic_log
+from datetime import datetime
 
 logger = getLogger(__name__)
 
@@ -23,6 +25,7 @@ def fetch_documents(url, doc_type=None):
     doc_type (list object or None) specifies which docs to return. Default None returns all doc types
     Returns dict object { doc_type: text }"""
     response = requests.get(url, headers=HEADERS)
+    civic_log.record(datetime.now(), url, response.status_code)
     time.sleep(REQUEST_DELAY)
 
     if response.status_code != 200:
@@ -50,6 +53,7 @@ def fetch_documents(url, doc_type=None):
             continue
 
         response_pdf = requests.get(target_docs[key], headers=HEADERS)
+        civic_log.record(datetime.now(), target_docs[key], response_pdf.status_code)
         time.sleep(REQUEST_DELAY)
 
         if response_pdf.status_code != 200:
