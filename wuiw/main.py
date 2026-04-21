@@ -82,7 +82,7 @@ def main():
             if failed:
                 failed_assignments += 1
         
-        if failed_assignments == new_assignments:
+        if failed_assignments == new_assignments and new_assignments > 0:
             status = STATUS_FAILED
             error = "all assignments failed"
         elif failed_assignments > 0 and failed_assignments < new_assignments:
