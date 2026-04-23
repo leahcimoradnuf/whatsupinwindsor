@@ -78,27 +78,38 @@ The v1.0 → v2.0 arc has one centerpiece: the **weekly email digest**. The dige
 
 ---
 
-## v1.5 — CivicPlus API Refactor + BOE Adapter
-**Goal:** Replace RSS/HTML scraping with the CivicPlus API and add Windsor Board of Education as a new intake source.
+## v1.5 — Intake Adapter Infrastructure+ BOE Adapter
+**Goal:** Add Windsor Board of Education as a new intake source.
 
 **Deliverables:**
-- Evaluate CivicPlus API access requirements (authentication, developer agreement)
 - Refactor `intake.py` into an adapter architecture — each source gets its own adapter normalizing output into a shared schema
-- CivicPlus adapter as primary intake mechanism replacing current scraper
-- BOE adapter for Windsor Board of Education (separate platform, TBD)
+- BOE adapter for Windsor Board of Education (BoardBook, scrape source code like backfill() does)
 - All existing bodies migrated to new adapter architecture
 
 **Notes:**
 - "Adapter by hosting platform" is the guiding architectural principle — one adapter covers many municipalities on the same platform
+- BOE platform: BoardBook — research required before scoping BOE adapter work. Will be similar to backfill()
+
+**Definition of Done:**
+- BOE intake working via its own adapter
+- All other bodies working via adapter structure
+- All existing tests passing
+
+---
+
+## v1.6 CivicPlus API Refactor
+**Goal:** Replace RSS/HTML scraping with the CivicPlus API
+
+**Deliverables:**
+- Evaluate CivicPlus API access requirements (authentication, developer agreement)
+- CivicPlus adapter as primary intake mechanism replacing current scraper
+
+**Notes:**
 - CivicPlus is used by thousands of municipalities nationally — this adapter has scaling implications beyond Windsor
-- BOE platform TBD — research required before scoping BOE adapter work
 - See GitHub issue for open questions on CivicPlus API access
 
 **Definition of Done:**
 - CivicPlus API adapter live and stable
-- BOE intake working via its own adapter
-- No JSON file dependencies remaining
-- All existing tests passing
 
 ---
 
