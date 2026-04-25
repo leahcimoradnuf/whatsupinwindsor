@@ -47,7 +47,7 @@ def db_conn():
         new_assignments INT,
         failed_assignments INT,
         error_message TEXT);"""
-    )
+        )
     cur.execute(
         """CREATE TABLE IF NOT EXISTS assignments (
         id SERIAL PRIMARY KEY,
@@ -60,7 +60,9 @@ def db_conn():
         documents_summarized INT,
         documents_available INT,
         status TEXT DEFAULT 'pending',
-        error_message TEXT);"""
+        error_message TEXT,
+        reviewed BOOLEAN DEFAULT FALSE,
+        published BOOLEAN DEFAULT TRUE);"""
         )
     cur.execute(
         """CREATE TABLE IF NOT EXISTS civic_requests (
@@ -69,7 +71,7 @@ def db_conn():
         timestamp TIMESTAMP,
         url TEXT,
         response_status INT);"""
-    )
+        )
     cur.execute(
         """CREATE TABLE IF NOT EXISTS ai_requests (
         id SERIAL PRIMARY KEY,
@@ -79,7 +81,7 @@ def db_conn():
         status TEXT,
         input_tokens INT,
         output_tokens INT);"""
-    )
+        )
     cur.execute(
         """CREATE TABLE IF NOT EXISTS articles (
         id SERIAL PRIMARY KEY,
@@ -88,12 +90,21 @@ def db_conn():
         byline TEXT,
         doc_type TEXT,
         summary JSONB,
-        reviewed BOOLEAN DEFAULT FALSE,
         UNIQUE (meeting_id, doc_type));"""
+        )
+    cur.execute(
+        """CREATE TABLE IF NOT EXISTS error_reports (
+        id SERIAL PRIMARY KEY,
+        meeting_id TEXT REFERENCES assignments(meeting_id),
+        report_text TEXT,
+        submitted_at TIMESTAMP DEFAULT NOW(),
+        resolved BOOLEAN DEFAULT FALSE
+        );"""
         )
     conn.commit()
     yield UnclosableConnection(conn)
     cur.execute("DROP TABLE articles")
+    cur.execute("DROP TABLE error_reports")
     cur.execute("DROP TABLE ai_requests")
     cur.execute("DROP TABLE civic_requests")
     cur.execute("DROP TABLE assignments")
@@ -115,8 +126,8 @@ def seeded_db(db_conn):
     for article in data.articles:
         cur.execute(
             """
-            INSERT INTO articles (meeting_id, meeting_date, byline, doc_type, summary, reviewed)
-            VALUES  (%s, %s, %s, %s, %s, FALSE)
+            INSERT INTO articles (meeting_id, meeting_date, byline, doc_type, summary)
+            VALUES  (%s, %s, %s, %s, %s)
             ON CONFLICT (meeting_id, doc_type) DO UPDATE SET
                 summary = EXCLUDED.summary,
                 meeting_date = EXCLUDED.meeting_date
@@ -141,15 +152,16 @@ def mock_provider():
         yield provider
 
 @pytest.fixture
-def client():
-    app.config["TESTING"] = True
-    with app.test_client() as client:
-        yield client
-
-@pytest.fixture
-def empty_client(db_conn):
+def client(db_conn):
     app.config["TESTING"] = True
     with patch("wuiw.app.get_db_connection", return_value=db_conn):
+        with app.test_client() as client:
+            yield client
+
+@pytest.fixture
+def seeded_client(seeded_db):
+    app.config["TESTING"] = True
+    with patch("wuiw.app.get_db_connection", return_value=seeded_db):
         with app.test_client() as client:
             yield client
 

@@ -12,21 +12,30 @@ logger = logging.getLogger(__name__)
 
 def update_status(meeting_id, status, error_message=None):
     """Update status of an assignment in the database"""
-    conn = get_db_connection()
-    cur = conn.cursor()
-    if error_message:
-        cur.execute("UPDATE assignments SET status = %s, error_message = %s where meeting_id=%s", (status, error_message, meeting_id))
-    else:
-        cur.execute("UPDATE assignments SET status = %s, error_message = NULL WHERE meeting_id = %s", (status, meeting_id))
-    conn.commit()
-    cur.close()
-    conn.close()
+    conn = None
+    cur = None
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        if error_message:
+            cur.execute("UPDATE assignments SET status = %s, error_message = %s where meeting_id=%s", (status, error_message, meeting_id))
+        else:
+            cur.execute("UPDATE assignments SET status = %s, error_message = NULL WHERE meeting_id = %s", (status, meeting_id))
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        raise
+    finally:
+       if cur: cur.close()
+       if conn: conn.close()
 
 def save_assignments(rss_assignments, run_id=None):
     """Add new assignments from intake.get_rss() to the assignments table"""
-    conn = get_db_connection()
-    cur = conn.cursor()
+    conn = None
+    cur = None
     try:
+        conn = get_db_connection()
+        cur = conn.cursor()
         for assignment in rss_assignments:
             cur.execute(
                 """INSERT INTO assignments (meeting_id, meeting_type, body, published_date, materials, last_run_id)
@@ -46,15 +55,17 @@ def save_assignments(rss_assignments, run_id=None):
         conn.rollback()
         raise
     finally:
-        cur.close()
-        conn.close()
+        if cur: cur.close()
+        if conn: conn.close()
 
 def assign():
     """Review db for assignments with status=STATUS_PENDING and send tasks to reporter.fetch_documents()
     Returns list of dicts"""
-    conn = get_db_connection()
-    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    conn = None
+    cur = None
     try:
+        conn = get_db_connection()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         cur.execute(
             """SELECT assignments.meeting_id, meeting_type, materials, status
             FROM assignments
@@ -68,8 +79,8 @@ def assign():
         conn.rollback()
         raise
     finally:
-        cur.close()
-        conn.close()
+        if cur: cur.close()
+        if conn: conn.close()
 
     for assignment in assignments:
         update_status(assignment['meeting_id'], STATUS_ASSIGNED)
@@ -78,14 +89,16 @@ def assign():
 
 def save_articles(articles):
     """Recieve articles from writer.write_article() and add them to the articles table"""
-    conn = get_db_connection()
-    cur = conn.cursor()
+    conn = None
+    cur = None
     try:
+        conn = get_db_connection()
+        cur = conn.cursor()
         for article in articles:
             cur.execute(
                 """
-                INSERT INTO articles (meeting_id, meeting_date, byline, doc_type, summary, reviewed)
-                VALUES  (%s, %s, %s, %s, %s, FALSE)
+                INSERT INTO articles (meeting_id, meeting_date, byline, doc_type, summary)
+                VALUES  (%s, %s, %s, %s, %s)
                 ON CONFLICT (meeting_id, doc_type) DO UPDATE SET
                     summary = EXCLUDED.summary,
                     meeting_date = EXCLUDED.meeting_date
@@ -97,13 +110,15 @@ def save_articles(articles):
         conn.rollback()
         raise
     finally:
-        cur.close()
-        conn.close()
+        if cur: cur.close()
+        if conn: conn.close()
 
 def open_intake(start):
-    conn = get_db_connection()
-    cur = conn.cursor()
+    conn = None
+    cur = None
     try:
+        conn = get_db_connection()
+        cur = conn.cursor()
         cur.execute("""INSERT INTO intake_records (run_started_at)
                     VALUES (%s)
                     RETURNING id;""", (start,))
@@ -113,15 +128,17 @@ def open_intake(start):
         conn.rollback()
         raise
     finally:
-        cur.close()
-        conn.close()
+        if cur: cur.close()
+        if conn: conn.close()
     
     return run_id
 
 def close_intake(run_id, stop, status, new_assignments, failed_assignments, error=None):
-    conn = get_db_connection()
-    cur = conn.cursor()
+    conn = None
+    cur = None
     try:
+        conn = get_db_connection()
+        cur = conn.cursor()
         cur.execute("""UPDATE intake_records
                     SET run_completed_at = %s,
                         status = %s,
@@ -135,15 +152,17 @@ def close_intake(run_id, stop, status, new_assignments, failed_assignments, erro
         conn.rollback()
         raise
     finally:
-        cur.close()
-        conn.close()
+        if cur: cur.close()
+        if conn: conn.close()
 
 def save_civic_log(logs):
     """save outgoing request logs to town servers
     log is a list of tuples returned by civic_log.info"""
-    conn = get_db_connection()
-    cur = conn.cursor()
+    conn = None
+    cur = None
     try:
+        conn = get_db_connection()
+        cur = conn.cursor()
         for log in logs:
             try:
                 cur.execute("""
@@ -156,15 +175,17 @@ def save_civic_log(logs):
                 logger.warning(f"{e}")
                 continue
     finally:    
-        cur.close()
-        conn.close()
+        if cur: cur.close()
+        if conn: conn.close()
 
 def save_ai_log(logs):
     """save outgoing request logs to ai providers
     log is a list of tuples returned by ai_log.info"""
-    conn = get_db_connection()
-    cur = conn.cursor()
+    conn = None
+    cur = None
     try:
+        conn = get_db_connection()
+        cur = conn.cursor()
         for log in logs:
             try:
                 cur.execute("""
@@ -177,8 +198,8 @@ def save_ai_log(logs):
                 logger.warning(f"{e}")
                 continue
     finally:
-        cur.close()
-        conn.close()
+        if cur: cur.close()
+        if conn: conn.close()
 
 def send_alert(error):
     sender = os.getenv("ALERT_EMAIL")
@@ -197,3 +218,76 @@ def send_alert(error):
         logger.info("Failure alert sent")
     except Exception as e:
         logger.error("Failed to send alert: %s", e)
+
+def update_article(meeting_id, updates):
+    """saves edits, sets reviewed = True, optionally resolves all open error reports
+    updates is type dict and is constructed by the POST route when updates are submitted
+
+    Data structure of updates:
+        {
+        "assignment": {
+            "meeting_type": "Regular Meeting"
+        },
+        "articles": {
+            "agenda": {
+                "items": ["items"]
+            },
+            "minutes": {
+                "meeting_date": "2025-03-01",
+                "headline": "headline",
+                "bullets": ["bullets"],
+                "blurb": "blurb"
+                }
+            }
+        }
+    """
+    conn = None
+    cur = None
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        # update assignments.meeting_type
+        cur.execute("""UPDATE assignments SET meeting_type = %s WHERE meeting_id = %s""",
+                    (updates["assignment"]["meeting_type"], meeting_id))
+
+        # update articles.meeting_date and articles.summary
+        for doc_type, data in updates["articles"].items():
+            if doc_type == "agenda":
+                pass
+
+            if doc_type == "minutes":
+                cur.execute("""UPDATE articles SET
+                            summary = %s,
+                            meeting_date = %s
+                            WHERE meeting_id = %s AND doc_type = %s""",
+                            (data, data["meeting_date"], meeting_id, doc_type))
+
+            if doc_type == "voting_grid":
+                pass
+
+        # update assignments.reviewed
+        cur.execute("""UPDATE assignments SET reviewed = TRUE
+                    WHERE meeting_id = %s""",
+                    (meeting_id,))
+
+        # update error_reports.status
+        cur.execute("""UPDATE error_reports SET resolved = TRUE
+                    WHERE meeting_id = %s""",
+                    (meeting_id,))
+
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        logger.warning(f"{e}")
+        raise
+    finally:
+        if cur: cur.close()
+        if conn: conn.close()
+
+def report_error(meeting_id, error_text):
+    """inserts a new row to error_reports"""
+    pass
+
+def publish_article(meeting_id, published=True):
+    """sets published boolean on an assignment"""
+    pass
