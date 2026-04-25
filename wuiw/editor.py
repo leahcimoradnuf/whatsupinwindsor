@@ -286,8 +286,38 @@ def update_article(meeting_id, updates):
 
 def report_error(meeting_id, error_text):
     """inserts a new row to error_reports"""
-    pass
+    conn = None
+    cur = None
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("""INSERT INTO error_reports (meeting_id, error_text) VALUES (%s, %s)""",
+                    (meeting_id, error_text))
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        logger.warning(f"{e}")
+        raise
+    finally:
+        if cur: cur.close()
+        if conn: conn.close()
+    
 
 def publish_article(meeting_id, published=True):
     """sets published boolean on an assignment"""
-    pass
+    conn = None
+    cur = None
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("""UPDATE assignments SET published = %s
+                    WHERE meeting_id = %s""",
+                    (published, meeting_id))
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        logger.warning(f"{e}")
+        raise
+    finally:
+        if cur: cur.close()
+        if conn: conn.close()

@@ -1,6 +1,8 @@
 import psycopg2
 import psycopg2.extras
-from flask import Flask, render_template, abort
+import os
+from flask import Flask, render_template, abort, redirect, url_for
+from flask import request, session
 from wuiw.config import get_db_connection
 
 app = Flask(__name__)
@@ -89,3 +91,20 @@ def contact():
 @app.route("/signup")
 def signup():
     return render_template("signup.html")
+
+@app.route("/login", methods=['GET', 'POST'])
+def admin_login():
+    if request.method == 'POST':
+        password = request.form['passkey']
+        if password == os.getenv("ADMIN-PASSWORD"):
+            session['admin'] = True
+            return redirect(url_for('dashboard'))
+        else:
+            return redirect(url_for('login'))
+    
+    return render_template("/admin-login.html")
+
+@app.route("/logout")
+def admin_logout():
+    session.pop('admin', None)
+    return redirect(url_for("index"))
