@@ -4,32 +4,32 @@ from wuiw.editor import save_assignments, save_articles
 from wuiw.config import get_db_connection
 
 # connect to test db and create tables
-conn = get_db_connection()
-cur = conn.cursor()
-cur.execute(
-    """CREATE TABLE IF NOT EXISTS assignments (
-    id SERIAL PRIMARY KEY,
-    meeting_id TEXT UNIQUE NOT NULL,
-    meeting_type TEXT,
-    body TEXT,
-    published_date DATE,
-    materials TEXT,
-    status TEXT DEFAULT 'pending',
-    error_message TEXT);"""
-    )
-cur.execute(
-    """CREATE TABLE IF NOT EXISTS articles (
-    id SERIAL PRIMARY KEY,
-    meeting_id TEXT UNIQUE NOT NULL,
-    meeting_date DATE,
-    byline TEXT,
-    doc_type TEXT,
-    summary JSONB,
-    UNIQUE (meeting_id, doc_type));"""
-    )
-conn.commit()
-cur.close()
-conn.close()
+# conn = get_db_connection()
+# cur = conn.cursor()
+# cur.execute(
+#     """CREATE TABLE IF NOT EXISTS assignments (
+#     id SERIAL PRIMARY KEY,
+#     meeting_id TEXT UNIQUE NOT NULL,
+#     meeting_type TEXT,
+#     body TEXT,
+#     published_date DATE,
+#     materials TEXT,
+#     status TEXT DEFAULT 'pending',
+#     error_message TEXT);"""
+#     )
+# cur.execute(
+#     """CREATE TABLE IF NOT EXISTS articles (
+#     id SERIAL PRIMARY KEY,
+#     meeting_id TEXT UNIQUE NOT NULL,
+#     meeting_date DATE,
+#     byline TEXT,
+#     doc_type TEXT,
+#     summary JSONB,
+#     UNIQUE (meeting_id, doc_type));"""
+#     )
+# conn.commit()
+# cur.close()
+# conn.close()
 
 # use editor.py functions to populate the tables
 
@@ -42,7 +42,7 @@ class SeedData:
                 "meeting_type": "regular meeting",
                 "body": "town council",
                 "published_date": "2026-01-05",
-                "materials": "https://www.windsorct.gov/AgendaCenter/ViewFile/Agenda/_01052026-1262?html=true"
+                "materials": "https://www.windsorct.gov/AgendaCenter/ViewFile/Agenda/_01052026-1262?html=true",
             },{
                 "meeting_id": "town_council_1263_2026",
                 "meeting_type": "regular meeting",

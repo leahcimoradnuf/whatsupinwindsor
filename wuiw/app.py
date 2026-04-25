@@ -13,12 +13,15 @@ def index():
                     assignments.meeting_id,
                     assignments.meeting_type,
                     assignments.materials,
+                    assignments.reviewed,
+                    assignments.published,
                     articles.meeting_date,
                     articles.byline,
                     articles.summary
                 FROM assignments
                 JOIN articles ON assignments.meeting_id = articles.meeting_id
-                WHERE articles.doc_type = 'minutes'""")
+                WHERE articles.doc_type = 'minutes'
+                AND assignments.published = TRUE""")
     articles = cur.fetchall()
     cur.close()
     conn.close()
