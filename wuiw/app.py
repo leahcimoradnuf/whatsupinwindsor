@@ -105,7 +105,7 @@ def admin_login():
         else:
             return redirect(url_for('login'))
     
-    return render_template("/admin-login.html")
+    return render_template("/admin_login.html")
 
 @app.route("/logout")
 def admin_logout():
@@ -146,3 +146,48 @@ def admin_dashboard():
 
     # render the page
     return render_template("dashboard.html", tasks=sorted_tasks)
+
+@app.route("/admin/articles/<meeting_id>", method=["GET", "POST"])
+@login_required
+def article(meeting_id):
+    # render single article
+    conn = None
+    cur = None
+    try:
+        conn = get_db_connection() 
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) 
+        cur.execute("""
+                    SELECT
+                        assignments.meeting_type,
+                        assignments.materials,
+                        articles.meeting_date,
+                        articles.byline,
+                        articles.summary
+                    FROM assignments
+                    JOIN articles ON assignments.meeting_id = articles.meeting_id
+                    WHERE assignments.meeting_id = %s AND articles.doc_type = 'minutes';
+            """, (meeting_id,))
+        article = cur.fetchone()
+        cur.execute("""
+                    SELECT report_text, submitted_at 
+                    FROM error_reports
+                    WHERE meeting_id = %s AND resolved = FALSE""",
+                    (meeting_id,))
+        errors = cur.fetchall()
+    except Exception as e:
+        logger.warning(e)
+        raise
+    finally:
+        if cur: cur.close()
+        if conn: conn.close()
+
+    if article is None:
+         abort(404)
+
+    # sort errors by date
+    for error in errors:
+        error["submitted_at"] = error["submitted_at"].strftime("%Y-%m-%d")
+
+    sorted_errors = sorted(errors, key=lambda item: item['submitted_at'], reverse=True)
+
+    return render_template("edit_article.html", article=article, errors=sorted_errors)
