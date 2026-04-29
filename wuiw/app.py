@@ -1,11 +1,14 @@
 import psycopg2
 import psycopg2.extras
 import os
+import logging
 from flask import Flask, render_template, abort, redirect, url_for
 from flask import request, session
 from wuiw.config import get_db_connection
+from functools import wraps
 
 app = Flask(__name__)
+logger = logging.getLogger(__name__)
 
 @app.route("/")
 def index():
@@ -108,3 +111,38 @@ def admin_login():
 def admin_logout():
     session.pop('admin', None)
     return redirect(url_for("index"))
+
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not session.get('admin'):
+            return redirect(url_for('login', next=request.url))
+        return f(*args, **kwargs)
+    return decorated_function
+        
+
+@app.route("/admin")
+@login_required
+def admin_dashboard():
+    conn = None
+    cur = None
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute("""SQL see above""")
+        tasks = cur.fetchall()
+    except Exception as e:
+        logger.warning(e)
+        raise
+    finally:
+        if cur: cur.close()
+        if conn: conn.close()
+
+    # order tasks by priority (most errors, then published)
+    sorted_tasks = sorted(
+        tasks, 
+        key=lambda item: (-item['error_count'], not item['published'])
+        )
+
+    # render the page
+    return render_template("dashboard.html", tasks=sorted_tasks)
