@@ -84,8 +84,8 @@ def save_articles(articles):
         for article in articles:
             cur.execute(
                 """
-                INSERT INTO articles (meeting_id, meeting_date, byline, doc_type, summary, reviewed)
-                VALUES  (%s, %s, %s, %s, %s, FALSE)
+                INSERT INTO articles (meeting_id, meeting_date, byline, doc_type, summary)
+                VALUES  (%s, %s, %s, %s, %s)
                 ON CONFLICT (meeting_id, doc_type) DO UPDATE SET
                     summary = EXCLUDED.summary,
                     meeting_date = EXCLUDED.meeting_date
