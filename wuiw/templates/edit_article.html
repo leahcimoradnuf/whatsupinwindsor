@@ -2,22 +2,21 @@
     {% block content %}
     <form action="/admin/articles/{{ meeting_id }}" method="POST">
         <h2>Headline</h2>
-            <input name="headline" placeholder="{{ article['summary']['headline'] }}">
+            <input name="headline" value="{{ article['summary']['headline'] }}">
         <h3>Meeting Type</h3>
-            <input name="meeting_type" placeholder="{{ article['meeting_type'].title() }}">
+            <input name="meeting_type" value="{{ article['meeting_type'].title() }}">
         <p>Summarized by:</p>
-            <input name="byline" placeholder="{{ article['byline'] }}">
+            <input name="byline" value="{{ article['byline'] }}">
         <p>Date:</p>
-            <input name="date" placeholder="{{ article['meeting_date'] }}">
+            <input name="date" value="{{ article['meeting_date'] }}">
         <p>Bullets:</p>
         {% for bullet in article['summary']['bullets'] %}
-            <textarea name="bullets">{{ bullet }}"</textarea>
+            <textarea name="bullets">{{ bullet }}</textarea>
         {% endfor %}
-        <textarea name="new_bullet"></textarea>
+        <textarea name="bullets"></textarea>
         <p>Blurb:</p>
-            <textarea name="blurb">"{{ article['summary']['blurb'] }}"</textarea>
+            <textarea name="blurb">{{ article['summary']['blurb'] }}</textarea>
         <hr>
-    </form>
     {% if errors %}
     <h2>Error Reports</h2>
     <table>
@@ -40,4 +39,5 @@
         <input type="hidden" name="action" value="approve">
         <button type="submit" onclick="return confirm('Are you sure?')">Submit and Approve</button>
     {% endif %}
+    </form>
     {% endblock %}

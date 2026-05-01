@@ -219,7 +219,7 @@ def send_alert(error):
     except Exception as e:
         logger.error("Failed to send alert: %s", e)
 
-def update_article(meeting_id, updates):
+def update_article(meeting_id, updates, resolved=False):
     """saves edits, sets reviewed = True, optionally resolves all open error reports
     updates is type dict and is constructed by the POST route when updates are submitted
 
@@ -228,7 +228,7 @@ def update_article(meeting_id, updates):
         "assignment": {
             "meeting_type": "Regular Meeting"
         },
-        "articles": {
+        "article": {
             "agenda": {
                 "items": ["items"]
             },
@@ -251,7 +251,7 @@ def update_article(meeting_id, updates):
                     (updates["assignment"]["meeting_type"], meeting_id))
 
         # update articles.meeting_date and articles.summary
-        for doc_type, data in updates["articles"].items():
+        for doc_type, data in updates["article"].items():
             if doc_type == "agenda":
                 pass
 
@@ -260,7 +260,7 @@ def update_article(meeting_id, updates):
                             summary = %s,
                             meeting_date = %s
                             WHERE meeting_id = %s AND doc_type = %s""",
-                            (data, data["meeting_date"], meeting_id, doc_type))
+                            (json.dumps(data), data["meeting_date"], meeting_id, doc_type))
 
             if doc_type == "voting_grid":
                 pass
@@ -271,9 +271,10 @@ def update_article(meeting_id, updates):
                     (meeting_id,))
 
         # update error_reports.status
-        cur.execute("""UPDATE error_reports SET resolved = TRUE
-                    WHERE meeting_id = %s""",
-                    (meeting_id,))
+        if resolved:
+            cur.execute("""UPDATE error_reports SET resolved = TRUE
+                        WHERE meeting_id = %s""",
+                        (meeting_id,))
 
         conn.commit()
     except Exception as e:

@@ -143,7 +143,10 @@ def admin_dashboard():
                         ON assignments.meeting_id = error_reports.meeting_id
                         AND error_reports.resolved = FALSE
                     GROUP BY assignments.meeting_id, assignments.meeting_type, 
-                            assignments.reviewed, assignments.published""")
+                            assignments.reviewed, assignments.published
+                    HAVING COUNT(error_reports.id) > 0 
+                        OR assignments.reviewed = FALSE 
+                        OR assignments.published = FALSE""")
         tasks = cur.fetchall()
     except Exception as e:
         logger.warning(e)
@@ -165,11 +168,13 @@ def admin_dashboard():
 @login_required
 def admin_article(meeting_id):
     if request.method == 'POST':
+        print("POST received")
+        print(request.form)
         items = []
         headline = request.form.get('headline')
         meeting_type = request.form.get('meeting_type')
         date = request.form.get('date')
-        bullets = request.form.getlist('bullets')
+        bullets = [b for b in request.form.getlist('bullets') if b.strip()]
         blurb = request.form.get('blurb')
 
         updates = {
@@ -185,7 +190,12 @@ def admin_article(meeting_id):
             }
         }
 
-        update_article(meeting_id, updates)
+        if request.form.get('action') == 'resolve': 
+            update_article(meeting_id, updates, resolved=True)
+        else:
+            update_article(meeting_id, updates)
+        
+        return redirect(url_for('admin_dashboard'))
 
     # render single article
     conn = None
