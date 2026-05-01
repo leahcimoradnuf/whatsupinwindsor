@@ -5,10 +5,13 @@ import logging
 from flask import Flask, render_template, abort, redirect, url_for
 from flask import request, session
 from wuiw.config import get_db_connection
+from wuiw.editor import update_article
 from functools import wraps
 
 app = Flask(__name__)
 logger = logging.getLogger(__name__)
+
+app.secret_key = os.environ.get("ADMIN-PASSWORD")
 
 @app.route("/")
 def index():
@@ -101,9 +104,9 @@ def admin_login():
         password = request.form['passkey']
         if password == os.getenv("ADMIN-PASSWORD"):
             session['admin'] = True
-            return redirect(url_for('dashboard'))
+            return redirect(url_for('admin_dashboard'))
         else:
-            return redirect(url_for('login'))
+            return redirect(url_for('admin_login'))
     
     return render_template("/admin_login.html")
 
@@ -116,7 +119,7 @@ def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if not session.get('admin'):
-            return redirect(url_for('login', next=request.url))
+            return redirect(url_for('admin_login', next=request.url))
         return f(*args, **kwargs)
     return decorated_function
         
@@ -129,7 +132,18 @@ def admin_dashboard():
     try:
         conn = get_db_connection()
         cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-        cur.execute("""SQL see above""")
+        cur.execute("""SELECT 
+                        assignments.meeting_id,
+                        assignments.meeting_type,
+                        assignments.reviewed,
+                        assignments.published,
+                        COUNT(error_reports.id) as error_count
+                    FROM assignments
+                    LEFT JOIN error_reports 
+                        ON assignments.meeting_id = error_reports.meeting_id
+                        AND error_reports.resolved = FALSE
+                    GROUP BY assignments.meeting_id, assignments.meeting_type, 
+                            assignments.reviewed, assignments.published""")
         tasks = cur.fetchall()
     except Exception as e:
         logger.warning(e)
@@ -147,9 +161,32 @@ def admin_dashboard():
     # render the page
     return render_template("dashboard.html", tasks=sorted_tasks)
 
-@app.route("/admin/articles/<meeting_id>", method=["GET", "POST"])
+@app.route("/admin/articles/<meeting_id>", methods=["GET", "POST"])
 @login_required
-def article(meeting_id):
+def admin_article(meeting_id):
+    if request.method == 'POST':
+        items = []
+        headline = request.form.get('headline')
+        meeting_type = request.form.get('meeting_type')
+        date = request.form.get('date')
+        bullets = request.form.getlist('bullets')
+        blurb = request.form.get('blurb')
+
+        updates = {
+            "assignment": {"meeting_type": meeting_type},
+            "article": {
+                "agenda": {"items": items},
+                "minutes": {
+                    "headline": headline,
+                    "meeting_date": date,
+                    "bullets": bullets,
+                    "blurb": blurb
+                }
+            }
+        }
+
+        update_article(meeting_id, updates)
+
     # render single article
     conn = None
     cur = None
@@ -190,4 +227,6 @@ def article(meeting_id):
 
     sorted_errors = sorted(errors, key=lambda item: item['submitted_at'], reverse=True)
 
-    return render_template("edit_article.html", article=article, errors=sorted_errors)
+    return render_template("edit_article.html", meeting_id=meeting_id, article=article, errors=sorted_errors)
+
+    

@@ -1,37 +1,6 @@
 import psycopg2
 import os
-from wuiw.editor import save_assignments, save_articles
-from wuiw.config import get_db_connection
-
-# connect to test db and create tables
-# conn = get_db_connection()
-# cur = conn.cursor()
-# cur.execute(
-#     """CREATE TABLE IF NOT EXISTS assignments (
-#     id SERIAL PRIMARY KEY,
-#     meeting_id TEXT UNIQUE NOT NULL,
-#     meeting_type TEXT,
-#     body TEXT,
-#     published_date DATE,
-#     materials TEXT,
-#     status TEXT DEFAULT 'pending',
-#     error_message TEXT);"""
-#     )
-# cur.execute(
-#     """CREATE TABLE IF NOT EXISTS articles (
-#     id SERIAL PRIMARY KEY,
-#     meeting_id TEXT UNIQUE NOT NULL,
-#     meeting_date DATE,
-#     byline TEXT,
-#     doc_type TEXT,
-#     summary JSONB,
-#     UNIQUE (meeting_id, doc_type));"""
-#     )
-# conn.commit()
-# cur.close()
-# conn.close()
-
-# use editor.py functions to populate the tables
+import json
 
 # assignments data
 class SeedData:
@@ -93,11 +62,124 @@ class SeedData:
             }
         ]
 
-# add to database
-# data = SeedData()
-# save_assignments(data.assignments)
-# try:
-#     save_articles(data.articles)
-#     print("articles saved")
-# except Exception as e:
-#     print(f"articles not saved: {e}")
+        self.errors = [
+            {
+                "meeting_id": "town_council_1263_2026",
+                "report_text": "You forgot the TPS report."
+            }
+        ]
+
+def connect_and_seed(url):
+    # get seed data
+    data = SeedData()
+
+    conn = psycopg2.connect(url)
+    cur = conn.cursor()
+
+    # create tables
+    cur.execute(
+        """CREATE TABLE IF NOT EXISTS intake_records (
+        id SERIAL PRIMARY KEY,
+        run_started_at TIMESTAMP,
+        run_completed_at TIMESTAMP,
+        status TEXT,
+        new_assignments INT,
+        failed_assignments INT,
+        error_message TEXT);"""
+        )
+    cur.execute(
+        """CREATE TABLE IF NOT EXISTS assignments (
+        id SERIAL PRIMARY KEY,
+        meeting_id TEXT UNIQUE NOT NULL,
+        meeting_type TEXT,
+        body TEXT,
+        published_date DATE,
+        materials TEXT,
+        last_run_id INT REFERENCES intake_records (id),
+        documents_summarized INT,
+        documents_available INT,
+        status TEXT DEFAULT 'pending',
+        error_message TEXT,
+        reviewed BOOLEAN DEFAULT FALSE,
+        published BOOLEAN DEFAULT TRUE);"""
+        )
+    cur.execute(
+        """CREATE TABLE IF NOT EXISTS civic_requests (
+        id SERIAL PRIMARY KEY,
+        run_id INT REFERENCES intake_records (id),
+        timestamp TIMESTAMP,
+        url TEXT,
+        response_status INT);"""
+        )
+    cur.execute(
+        """CREATE TABLE IF NOT EXISTS ai_requests (
+        id SERIAL PRIMARY KEY,
+        run_id INT REFERENCES intake_records (id),
+        timestamp TIMESTAMP,
+        provider TEXT,
+        status TEXT,
+        input_tokens INT,
+        output_tokens INT);"""
+        )
+    cur.execute(
+        """CREATE TABLE IF NOT EXISTS articles (
+        id SERIAL PRIMARY KEY,
+        meeting_id TEXT UNIQUE NOT NULL,
+        meeting_date DATE,
+        byline TEXT,
+        doc_type TEXT,
+        summary JSONB,
+        UNIQUE (meeting_id, doc_type));"""
+        )
+    cur.execute(
+        """CREATE TABLE IF NOT EXISTS error_reports (
+        id SERIAL PRIMARY KEY,
+        meeting_id TEXT REFERENCES assignments(meeting_id),
+        report_text TEXT,
+        submitted_at TIMESTAMP DEFAULT NOW(),
+        resolved BOOLEAN DEFAULT FALSE
+        );"""
+        )
+    
+    # seed data
+    for assignment in data.assignments:
+        cur.execute(
+            """INSERT INTO assignments (meeting_id, meeting_type, body, published_date, materials, status)
+            VALUES (%s, %s, %s, %s, %s, %s)""",
+            (assignment["meeting_id"], assignment["meeting_type"], assignment["body"], assignment["published_date"], assignment["materials"], "pending")
+        )
+    for article in data.articles:
+        cur.execute(
+            """
+            INSERT INTO articles (meeting_id, meeting_date, byline, doc_type, summary)
+            VALUES  (%s, %s, %s, %s, %s)
+            ON CONFLICT (meeting_id, doc_type) DO UPDATE SET
+                summary = EXCLUDED.summary,
+                meeting_date = EXCLUDED.meeting_date
+            """,
+            (article['meeting_id'], article['meeting_date'], article['byline'], article["doc_type"], json.dumps(article['summary']))
+        )
+    for error in data.errors:
+        cur.execute(
+            """INSERT INTO error_reports (meeting_id, report_text)
+            VALUES (%s, %s)""",
+            (error['meeting_id'], error['report_text'])
+        )
+
+
+    conn.commit()
+    cur.close()
+    conn.close()
+    
+def cleanup():
+    conn = psycopg2.connect(os.getenv("TEST_DATABASE_URL"))
+    cur = conn.cursor()
+    cur.execute("DROP TABLE articles")
+    cur.execute("DROP TABLE error_reports")
+    cur.execute("DROP TABLE ai_requests")
+    cur.execute("DROP TABLE civic_requests")
+    cur.execute("DROP TABLE assignments")
+    cur.execute("DROP TABLE intake_records")
+    conn.commit()
+    cur.close()
+    conn.close()
