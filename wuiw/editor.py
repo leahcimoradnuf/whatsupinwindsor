@@ -202,6 +202,11 @@ def save_ai_log(logs):
         if conn: conn.close()
 
 def send_alert(error):
+    """_summary_
+
+    Args:
+        error (_type_): _description_
+    """
     sender = os.getenv("ALERT_EMAIL")
     password = os.getenv("ALERT_EMAIL_PASSWORD")
     recipient = os.getenv("ALERT_EMAIL")  # send to yourself
@@ -240,6 +245,12 @@ def update_article(meeting_id, updates, resolved=False):
                 }
             }
         }
+
+    Args:
+        meeting_id (str): _description_
+        updates (dict): _description_
+        resolved (bool, optional): Toggles resolved status. Defaults to False.
+
     """
     conn = None
     cur = None
@@ -284,6 +295,7 @@ def update_article(meeting_id, updates, resolved=False):
     finally:
         if cur: cur.close()
         if conn: conn.close()
+    
 
 def report_error(meeting_id, error_text):
     """inserts a new row to error_reports"""
@@ -292,7 +304,7 @@ def report_error(meeting_id, error_text):
     try:
         conn = get_db_connection()
         cur = conn.cursor()
-        cur.execute("""INSERT INTO error_reports (meeting_id, error_text) VALUES (%s, %s)""",
+        cur.execute("""INSERT INTO error_reports (meeting_id, report_text) VALUES (%s, %s)""",
                     (meeting_id, error_text))
         conn.commit()
     except Exception as e:
@@ -314,6 +326,25 @@ def publish_article(meeting_id, published=True):
         cur.execute("""UPDATE assignments SET published = %s
                     WHERE meeting_id = %s""",
                     (published, meeting_id))
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        logger.warning(f"{e}")
+        raise
+    finally:
+        if cur: cur.close()
+        if conn: conn.close()
+
+def approve_article(meeting_id, reviewed=True):
+    """sets reviewed boolean on an assignment"""
+    conn = None
+    cur = None
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("""UPDATE assignments SET reviewed = %s
+                    WHERE meeting_id = %s""",
+                    (reviewed, meeting_id))
         conn.commit()
     except Exception as e:
         conn.rollback()
