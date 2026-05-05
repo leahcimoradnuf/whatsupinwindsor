@@ -5,13 +5,17 @@ import logging
 from flask import Flask, render_template, abort, redirect, url_for
 from flask import request, session
 from wuiw.config import get_db_connection
-from wuiw.editor import update_article
+from wuiw.editor import update_article, report_error, approve_article, publish_article
+from wuiw.main import main
 from functools import wraps
 
+# Initiate stuff
 app = Flask(__name__)
 logger = logging.getLogger(__name__)
 
 app.secret_key = os.environ.get("ADMIN-PASSWORD")
+
+_run_in_progress = False
 
 @app.route("/")
 def index():
@@ -64,6 +68,7 @@ def article(meeting_id):
                 SELECT
                     assignments.meeting_type,
                     assignments.materials,
+                    articles.meeting_id,
                     articles.meeting_date,
                     articles.byline,
                     articles.summary
@@ -78,9 +83,16 @@ def article(meeting_id):
          abort(404)
     return render_template("article.html", article=article)
 
-@app.route("/report-error")
-def report_error():
-    return render_template("report_error.html")
+@app.route("/report-error", methods=['GET', 'POST'])
+def report_error_route():
+    if request.method == 'POST':
+        meeting_id = request.form.get('meeting_id')
+        text = request.form.get('feedback')
+        report_error(meeting_id, text)
+        return render_template("thanks_for_feedback.html")
+    
+    meeting_id = request.args.get('meeting_id')
+    return render_template("report_error.html", meeting_id=meeting_id)
 
 @app.route("/about")
 def about():
@@ -164,6 +176,22 @@ def admin_dashboard():
     # render the page
     return render_template("dashboard.html", tasks=sorted_tasks)
 
+@app.route("/admin/run", methods=["POST"])
+@login_required
+def admin_run():
+    global _run_in_progress
+    if _run_in_progress:
+        return redirect(url_for('admin_dashboard'))
+    _run_in_progress = True
+    # kick off background thread
+    try:
+        main()
+    except Exception as e:
+        logger.warning(e)
+    finally:
+        _run_in_progress = False
+        return redirect(url_for('admin_dashboard'))
+
 @app.route("/admin/articles/<meeting_id>", methods=["GET", "POST"])
 @login_required
 def admin_article(meeting_id):
@@ -239,4 +267,19 @@ def admin_article(meeting_id):
 
     return render_template("edit_article.html", meeting_id=meeting_id, article=article, errors=sorted_errors)
 
+@app.route("/admin/articles/<meeting_id>/publish", methods=['POST'])
+@login_required
+def publish(meeting_id):
+    publish = {"true": True, "false": False}
+    publish_article(meeting_id, published=publish[request.form.get('published')])
+    next_page = request.form.get('next', url_for('admin_dashboard'))
+    return redirect(next_page)
+
+@app.route("/admin/articles/<meeting_id>/approve", methods=['POST'])
+@login_required
+def quick_approve(meeting_id):
+    review = {"true": True, "false": False}
+    approve_article(meeting_id, reviewed=review[request.form.get('reviewed')])
+    next_page = request.form.get('next', url_for('admin_dashboard'))
+    return redirect(next_page)
     

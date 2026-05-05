@@ -10,11 +10,27 @@
                 <li>{{ bullet }}</li>
             {% endfor %}
         </ul>
+        {% if session.get("admin") %}
+        <p>{{ article['summary']['blurb'] }}</p>
+        <div class="article-links">
+            <a href="/admin/articles/{{ article['meeting_id'] }}">Edit</a>
+            <a href= "{{ article['materials'] }}" target="_blank">Original Documents</a>
+        </div>
+        <form class="quick edit">
+            <input type="hidden" name="next" value="{{ request.path }}">
+            <input type="hidden" name="reviewed" value="{{ 'true' if not article['reviewed'] else 'false' }}">
+            <button type="submit">{% if not article['reviewed'] %}Quick Approve{% else %}Mark as Unreviewed{% endif %}</button>
+            <input type="hidden" name="next" value="{{ request.path }}">
+            <input type="hidden" name="published" value="{{ 'false' if article['published'] else 'true' }}">
+            <button type="submit">{% if article['published'] %}Unpublish{% else %}Publish{% endif %}</button>
+        </form>
+        {% else %}
         <div class="article-links">
             <a href="/articles/{{ article['meeting_id'] }}">Read More</a>
             <a href= "{{ article['materials'] }}" target="_blank">Original Documents</a>
-            <a href="/report-error">Report Error</a>
+            <a href="/report-error?meeting_id={{ article['meeting_id'] }}">Report Error</a>
         </div>
+        {% endif %}
         <footer>
             This is an automated summary of a public document and is not an official town record. For official meeting minutes, see the link above.
             {% if article['reviewed'] %}
