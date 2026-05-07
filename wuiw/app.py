@@ -17,30 +17,58 @@ app.secret_key = os.environ.get("ADMIN-PASSWORD")
 
 _run_in_progress = False
 
+@app.errorhandler(404)
+def page_not_found(error):
+    # Renders 'not_available.html' and ensures the response code is 404
+    return render_template('not_available.html'), 404
+
 @app.route("/")
 def index():
-    conn = get_db_connection()
-    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-    cur.execute("""SELECT 
-                    assignments.meeting_id,
-                    assignments.meeting_type,
-                    assignments.materials,
-                    assignments.reviewed,
-                    assignments.published,
-                    articles.meeting_date,
-                    articles.byline,
-                    articles.summary
-                FROM assignments
-                JOIN articles ON assignments.meeting_id = articles.meeting_id
-                WHERE articles.doc_type = 'minutes'
-                AND assignments.published = TRUE""")
-    articles = cur.fetchall()
-    cur.close()
-    conn.close()
-    for article in articles:
-        article["meeting_date"] = article["meeting_date"].strftime("%Y-%m-%d")
+    if session.get('admin'):
+        conn = get_db_connection()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute("""SELECT 
+                        assignments.meeting_id,
+                        assignments.meeting_type,
+                        assignments.materials,
+                        assignments.reviewed,
+                        assignments.published,
+                        articles.meeting_date,
+                        articles.byline,
+                        articles.summary
+                    FROM assignments
+                    JOIN articles ON assignments.meeting_id = articles.meeting_id
+                    WHERE articles.doc_type = 'minutes'""")
+        articles = cur.fetchall()
+        cur.close()
+        conn.close()
+        for article in articles:
+            article["meeting_date"] = article["meeting_date"].strftime("%Y-%m-%d")
 
-    sorted_articles = sorted(articles, key=lambda item: item['meeting_date'], reverse=True)
+        sorted_articles = sorted(articles, key=lambda item: item['meeting_date'], reverse=True)
+    else:
+        conn = get_db_connection()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute("""SELECT 
+                        assignments.meeting_id,
+                        assignments.meeting_type,
+                        assignments.materials,
+                        assignments.reviewed,
+                        assignments.published,
+                        articles.meeting_date,
+                        articles.byline,
+                        articles.summary
+                    FROM assignments
+                    JOIN articles ON assignments.meeting_id = articles.meeting_id
+                    WHERE articles.doc_type = 'minutes'
+                    AND assignments.published = TRUE""")
+        articles = cur.fetchall()
+        cur.close()
+        conn.close()
+        for article in articles:
+            article["meeting_date"] = article["meeting_date"].strftime("%Y-%m-%d")
+
+        sorted_articles = sorted(articles, key=lambda item: item['meeting_date'], reverse=True)
     return render_template("index.html", articles=sorted_articles)
 
 @app.route("/articles")
@@ -62,25 +90,52 @@ def article_index():
 @app.route("/articles/<meeting_id>")
 def article(meeting_id):
     # render single article
-    conn = get_db_connection() 
-    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) 
-    cur.execute("""
-                SELECT
-                    assignments.meeting_type,
-                    assignments.materials,
-                    articles.meeting_id,
-                    articles.meeting_date,
-                    articles.byline,
-                    articles.summary
-                FROM assignments
-                JOIN articles ON assignments.meeting_id = articles.meeting_id
-                WHERE assignments.meeting_id = %s AND articles.doc_type = 'minutes';
-        """, (meeting_id,))
-    article = cur.fetchone()
-    cur.close()
-    conn.close()
+    if session.get('admin'):
+        conn = get_db_connection() 
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) 
+        cur.execute("""
+                    SELECT
+                        assignments.meeting_type,
+                        assignments.materials,
+                        assignments.reviewed,
+                        assignments.published,
+                        articles.meeting_id,
+                        articles.meeting_date,
+                        articles.byline,
+                        articles.summary
+                    FROM assignments
+                    JOIN articles ON assignments.meeting_id = articles.meeting_id
+                    WHERE assignments.meeting_id = %s AND articles.doc_type = 'minutes';
+            """, (meeting_id,))
+        article = cur.fetchone()
+        cur.close()
+        conn.close()
+    else:
+        conn = get_db_connection() 
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) 
+        cur.execute("""
+                    SELECT
+                        assignments.meeting_type,
+                        assignments.materials,
+                        assignments.reviewed,
+                        assignments.published,
+                        articles.meeting_id,
+                        articles.meeting_date,
+                        articles.byline,
+                        articles.summary
+                    FROM assignments
+                    JOIN articles ON assignments.meeting_id = articles.meeting_id
+                    WHERE assignments.meeting_id = %s 
+                    AND articles.doc_type = 'minutes'
+                    AND assignments.published = TRUE;
+            """, (meeting_id,))
+        article = cur.fetchone()
+        cur.close()
+        conn.close()
+        
     if article is None:
          abort(404)
+    
     return render_template("article.html", article=article)
 
 @app.route("/report-error", methods=['GET', 'POST'])
@@ -272,14 +327,12 @@ def admin_article(meeting_id):
 def publish(meeting_id):
     publish = {"true": True, "false": False}
     publish_article(meeting_id, published=publish[request.form.get('published')])
-    next_page = request.form.get('next', url_for('admin_dashboard'))
-    return redirect(next_page)
+    return redirect(url_for('admin_dashboard'))
 
 @app.route("/admin/articles/<meeting_id>/approve", methods=['POST'])
 @login_required
 def quick_approve(meeting_id):
     review = {"true": True, "false": False}
     approve_article(meeting_id, reviewed=review[request.form.get('reviewed')])
-    next_page = request.form.get('next', url_for('admin_dashboard'))
-    return redirect(next_page)
+    return redirect(url_for('admin_dashboard'))
     
