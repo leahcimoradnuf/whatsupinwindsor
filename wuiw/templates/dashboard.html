@@ -10,7 +10,7 @@
     <th>Assignment ID</th>
     <th>Error Count</th>
     <th>Reviewed</th>
-    <th>Published</th>
+    <th colspan=2>Published</th>
   </tr>
   {% for task in tasks %}
   <tr class="{% if task['published'] and task['error_count'] > 0 %}red{% elif not task['reviewed'] and task['published'] %}yellow{% elif not task['published'] %}grey{% else %}{% endif %}">
@@ -20,6 +20,12 @@
     <td>{{ task['error_count'] }}</td>
     <td>{{ "Yes" if task['reviewed'] else "No" }}</td>
     <td>{{ "Yes" if task['published'] else "No" }}</td>
+    <td>
+      <form class="quick_edit" action="/admin/articles/{{ task['meeting_id' ] }}/publish" method="post">
+        <input type="hidden" name="published" value="{{ 'false' if task['published'] else 'true' }}">
+        <button type="submit">{% if task['published'] %}Unpublish{% else %}Publish{% endif %}</button>
+      </form>  
+    </td>
   </tr>
   {% endfor %}
 </table>

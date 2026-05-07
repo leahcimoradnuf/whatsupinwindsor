@@ -2,6 +2,7 @@
 {% block content %}
 <div class="timeline">
 {% for article in articles %}
+    {% if session.get("admin") %}
     <article>
         <h2>{{ article['summary']['headline'] }}</h2>
         <p>Summarized by: {{ article['byline'] }} | Date: {{ article['meeting_date'] }}</p>
@@ -10,37 +11,48 @@
                 <li>{{ bullet }}</li>
             {% endfor %}
         </ul>
-        {% if session.get("admin") %}
         <p>{{ article['summary']['blurb'] }}</p>
         <div class="article-links">
             <a href="/admin/articles/{{ article['meeting_id'] }}">Edit</a>
             <a href= "{{ article['materials'] }}" target="_blank">Original Documents</a>
         </div>
-        <form class="quick edit">
-            <input type="hidden" name="next" value="{{ request.path }}">
+        <form class="quick_edit" action="/admin/articles/{{ article['meeting_id'] }}/approve" method="post">
             <input type="hidden" name="reviewed" value="{{ 'true' if not article['reviewed'] else 'false' }}">
             <button type="submit">{% if not article['reviewed'] %}Quick Approve{% else %}Mark as Unreviewed{% endif %}</button>
-            <input type="hidden" name="next" value="{{ request.path }}">
+        </form>
+        <form class="quick_edit" action="/admin/articles/{{ article['meeting_id' ] }}/publish" method="post">
             <input type="hidden" name="published" value="{{ 'false' if article['published'] else 'true' }}">
             <button type="submit">{% if article['published'] %}Unpublish{% else %}Publish{% endif %}</button>
-        </form>
-        {% else %}
-        <div class="article-links">
-            <a href="/articles/{{ article['meeting_id'] }}">Read More</a>
-            <a href= "{{ article['materials'] }}" target="_blank">Original Documents</a>
-            <a href="/report-error?meeting_id={{ article['meeting_id'] }}">Report Error</a>
-        </div>
-        {% endif %}
-        <footer>
-            This is an automated summary of a public document and is not an official town record. For official meeting minutes, see the link above.
-            {% if article['reviewed'] %}
-                This article has been human-reviewed.
-            {% else %}
-                This article has not yet been human-reviewed
-            {% endif %}
-        </footer>
+        </form>        
         <hr>
    </article>
+   {% else %}
+        {% if article['published'] %}
+        <article>
+            <h2>{{ article['summary']['headline'] }}</h2>
+            <p>Summarized by: {{ article['byline'] }} | Date: {{ article['meeting_date'] }}</p>
+            <ul>
+                {% for bullet in article['summary']['bullets'] %}
+                    <li>{{ bullet }}</li>
+                {% endfor %}
+            </ul>
+            <div class="article-links">
+                <a href="/articles/{{ article['meeting_id'] }}">Read More</a>
+                <a href= "{{ article['materials'] }}" target="_blank">Original Documents</a>
+                <a href="/report-error?meeting_id={{ article['meeting_id'] }}">Report Error</a>
+            </div>
+            <footer>
+                This is an automated summary of a public document and is not an official town record. For official meeting minutes, see the link above.
+                {% if article['reviewed'] %}
+                    This article has been human-reviewed.
+                {% else %}
+                    This article has not yet been human-reviewed
+                {% endif %}
+            </footer>
+        </article>
+        {% else %}
+        {% endif %}
+   {% endif %}
 {% endfor %}
 </div>
 {% endblock %}
