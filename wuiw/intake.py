@@ -34,7 +34,7 @@ def get_rss(rss_url):
             title = entry["title"]
             body = classify(title, MUNICIPAL_BODIES)
             body = "_".join(body.lower().split())
-            meeting_type = classify(title, MEETING_TYPES)
+            meeting_type = classify(title, MEETING_TYPES, meeting_type_fallback=True)
             year = entry["published_parsed"][0]
             month = entry["published_parsed"][1]
             day = entry["published_parsed"][2]

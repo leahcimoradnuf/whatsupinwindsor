@@ -11,11 +11,11 @@
             <input name="date" value="{{ article['meeting_date'] }}">
         <p>Bullets:</p>
         {% for bullet in article['summary']['bullets'] %}
-            <textarea name="bullets">{{ bullet }}</textarea>
+            <textarea class="bullets" name="bullets">{{ bullet }}</textarea>
         {% endfor %}
-        <textarea name="bullets"></textarea>
+        <textarea class="bullets" name="bullets"></textarea>
         <p>Blurb:</p>
-            <textarea name="blurb">{{ article['summary']['blurb'] }}</textarea>
+            <textarea class="blurb" name="blurb">{{ article['summary']['blurb'] }}</textarea>
         <hr>
     {% if errors %}
     <h2>Error Reports</h2>
