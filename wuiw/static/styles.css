@@ -112,3 +112,25 @@ th {
 .site-footer {
     margin-top: auto;
 }
+
+tr.red { background-color: #f8d7da; }
+tr.yellow { background-color: #fff3cd; }
+tr.grey { background-color: #e2e3e5; }
+
+textarea {
+    width: 90%;
+    height: 80px;
+    resize: vertical;
+}
+
+textarea.bullets {
+    width: 90%;
+    height: 40px;
+    resize: vertical;
+}
+
+textarea.blurb {
+    width: 90%;
+    height: 120px;
+    resize: vertical;
+}
