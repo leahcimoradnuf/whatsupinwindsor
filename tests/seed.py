@@ -69,14 +69,19 @@ class SeedData:
             }
         ]
 
-def connect_and_seed(url):
-    # get seed data
-    data = SeedData()
+def spool_up(url):
+    print("connect() called")
+    try:
+        conn = psycopg2.connect(url)
+        print("connected")
+    except Exception as e:
+        print(f"connection failed: {e}")
+        return None
+    return conn
 
-    conn = psycopg2.connect(url)
-    cur = conn.cursor()
-
+def create_tables(conn):
     # create tables
+    cur = conn.cursor()
     cur.execute(
         """CREATE TABLE IF NOT EXISTS intake_records (
         id SERIAL PRIMARY KEY,
@@ -140,7 +145,15 @@ def connect_and_seed(url):
         resolved BOOLEAN DEFAULT FALSE
         );"""
         )
-    
+    conn.commit()
+    cur.close()
+
+
+def seed_db(conn):
+    cur = conn.cursor()
+    # get seed data
+    data = SeedData()
+
     # seed data
     for assignment in data.assignments:
         cur.execute(
@@ -166,13 +179,12 @@ def connect_and_seed(url):
             (error['meeting_id'], error['report_text'])
         )
 
-
     conn.commit()
     cur.close()
-    conn.close()
+    # conn.close()
     
-def cleanup():
-    conn = psycopg2.connect(os.getenv("TEST_DATABASE_URL"))
+def cleanup(conn):
+    # conn = psycopg2.connect(os.getenv("TEST_DATABASE_URL"))
     cur = conn.cursor()
     cur.execute("DROP TABLE articles")
     cur.execute("DROP TABLE error_reports")
