@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>WUIW Editor's Dashboard</h2>
+<form action="/admin/run" method="POST">
+    <button type="submit">Fetch Data</button>
+</form>
+<table>
+  <tr>
+    <th colspan=2>Action</th>
+    <th>Assignment ID</th>
+    <th>Error Count</th>
+    <th>Reviewed</th>
+    <th colspan=2>Published</th>
+  </tr>
+  {% for task in tasks %}
+  <tr class="{% if task['published'] and task['error_count'] > 0 %}red{% elif not task['reviewed'] and task['published'] %}yellow{% elif not task['published'] %}grey{% else %}{% endif %}">
+    <td><a href="/articles/{{ task['meeting_id'] }}">Review</a></td>
+    <td><a href="/admin/articles/{{ task['meeting_id'] }}">Edit</a></td>
+    <td>{{ task['meeting_id'] }}</td>
+    <td>{{ task['error_count'] }}</td>
+    <td>{{ "Yes" if task['reviewed'] else "No" }}</td>
+    <td>{{ "Yes" if task['published'] else "No" }}</td>
+    <td>
+      <form class="quick_edit" action="/admin/articles/{{ task['meeting_id' ] }}/publish" method="post">
+        <input type="hidden" name="published" value="{{ 'false' if task['published'] else 'true' }}">
+        <button type="submit">{% if task['published'] %}Unpublish{% else %}Publish{% endif %}</button>
+      </form>  
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+{% endblock %}

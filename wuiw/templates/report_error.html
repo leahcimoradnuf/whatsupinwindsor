@@ -1,11 +1,12 @@
-<!DOCTYPE html>
-<head>
-    <title>Report an Error</title>
-</head>
 {% extends "base.html" %}
 {% block content %}
 <body>
-    <p>Report mistake to mike@whatsupinwindsor.com</p>
+    <p>Please describe the error below.</p>
+    <form action="/report-error" method="POST">
+        <input type="hidden" name="meeting_id" value="{{ meeting_id }}">
+        <textarea name="feedback"></textarea>
+        <button type="submit">Submit</button>
+    </form>
+    <p>For other concerns contact the developer: mike@whatsupinwindsor.com</p>
 </body>
 {% endblock %}
-</html>

@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+    {% block content %}
+    <form action="/admin/articles/{{ meeting_id }}" method="POST">
+        <h2>Headline</h2>
+            <input name="headline" value="{{ article['summary']['headline'] }}">
+        <h3>Meeting Type</h3>
+            <input name="meeting_type" value="{{ article['meeting_type'].title() }}">
+        <p>Summarized by:</p>
+            <input name="byline" value="{{ article['byline'] }}">
+        <p>Date:</p>
+            <input name="date" value="{{ article['meeting_date'] }}">
+        <p>Bullets:</p>
+        {% for bullet in article['summary']['bullets'] %}
+            <textarea class="bullets" name="bullets">{{ bullet }}</textarea>
+        {% endfor %}
+        <textarea class="bullets" name="bullets"></textarea>
+        <p>Blurb:</p>
+            <textarea class="blurb" name="blurb">{{ article['summary']['blurb'] }}</textarea>
+        <hr>
+    {% if errors %}
+    <h2>Error Reports</h2>
+    <table>
+        <tr>
+            <th>Recieved</th>
+            <th>Comment</th>
+        </tr>
+        {% for error in errors %}
+        <tr>
+            <td>{{ error['submitted_at'] }}</td>
+            <td>{{ error['report_text'] }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% endif %}
+    {% if errors %}
+        <input type="hidden" name="action" value="resolve">
+        <button type="submit" onclick="return confirm('Are you sure?')">Submit and Resolve</button>
+    {% else %}
+        <input type="hidden" name="action" value="approve">
+        <button type="submit" onclick="return confirm('Are you sure?')">Submit and Approve</button>
+    {% endif %}
+    </form>
+    {% endblock %}
