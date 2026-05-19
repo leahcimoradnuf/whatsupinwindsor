@@ -153,3 +153,22 @@ def admin_client(client):
     with client.session_transaction() as sess:
         sess['admin'] = True
     yield client
+
+@pytest.fixture
+def edit_seeded():
+    data = {
+            "headline": "Town Council Approves $400k Bond, Settles Suit, and Files TPS Reports",
+            "meeting_type": "Regular Meeting",
+            "date": "2026-01-20",            
+            "bullets": [
+                "$400,000 bond for stormwater management program approved unanimously",
+                "Council endorses the proposed 2025 Plan of Conservation and Development",
+                "Public concerns raised about police department staffing and management",
+                "Fire prevention poster contest awards presented to school students",
+                "Upcoming public meetings on automated license plate readers and Senior Olympics announced",
+                "Settlement of Rivers Bend lawsuit agreed upon during Executive Session"
+            ],
+            "blurb": "The Windsor Town Council's meeting on January 20 saw the approval of a $400,000 bond for stormwater management, alongside unanimous endorsement of the updated 2025 Plan of Conservation and Development. Public commentary reflected concerns regarding police staffing and management practices. The council recognized students from local schools for their achievements in fire safety awareness with a poster contest. A settlement regarding the Rivers Bend lawsuit was also discussed and ratified in Executive Session. Additionally, upcoming community events, including a public meeting on automated license plate readers, were highlighted.",
+            "action": "resolve"
+    }
+    return data
