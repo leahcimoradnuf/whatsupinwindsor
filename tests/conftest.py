@@ -8,7 +8,7 @@ import psycopg2
 import json
 from unittest.mock import patch, MagicMock
 from wuiw.app import app
-from tests.seed import SeedData
+from tests.seed import SeedData, create_tables, seed_db, cleanup
 
 # Classes
 
@@ -37,93 +37,13 @@ def file_server():
 @pytest.fixture
 def db_conn():
     conn = psycopg2.connect(os.getenv("TEST_DATABASE_URL"))
-    cur = conn.cursor()
-    cur.execute(
-        """CREATE TABLE IF NOT EXISTS intake_records (
-        id SERIAL PRIMARY KEY,
-        run_started_at TIMESTAMP,
-        run_completed_at TIMESTAMP,
-        status TEXT,
-        new_assignments INT,
-        failed_assignments INT,
-        error_message TEXT);"""
-    )
-    cur.execute(
-        """CREATE TABLE IF NOT EXISTS assignments (
-        id SERIAL PRIMARY KEY,
-        meeting_id TEXT UNIQUE NOT NULL,
-        meeting_type TEXT,
-        body TEXT,
-        published_date DATE,
-        materials TEXT,
-        last_run_id INT REFERENCES intake_records (id),
-        documents_summarized INT,
-        documents_available INT,
-        status TEXT DEFAULT 'pending',
-        error_message TEXT);"""
-        )
-    cur.execute(
-        """CREATE TABLE IF NOT EXISTS civic_requests (
-        id SERIAL PRIMARY KEY,
-        run_id INT REFERENCES intake_records (id),
-        timestamp TIMESTAMP,
-        url TEXT,
-        response_status INT);"""
-    )
-    cur.execute(
-        """CREATE TABLE IF NOT EXISTS ai_requests (
-        id SERIAL PRIMARY KEY,
-        run_id INT REFERENCES intake_records (id),
-        timestamp TIMESTAMP,
-        provider TEXT,
-        status TEXT,
-        input_tokens INT,
-        output_tokens INT);"""
-    )
-    cur.execute(
-        """CREATE TABLE IF NOT EXISTS articles (
-        id SERIAL PRIMARY KEY,
-        meeting_id TEXT UNIQUE NOT NULL,
-        meeting_date DATE,
-        byline TEXT,
-        doc_type TEXT,
-        summary JSONB,
-        reviewed BOOLEAN DEFAULT FALSE,
-        UNIQUE (meeting_id, doc_type));"""
-        )
-    conn.commit()
+    create_tables(conn)
     yield UnclosableConnection(conn)
-    cur.execute("DROP TABLE articles")
-    cur.execute("DROP TABLE ai_requests")
-    cur.execute("DROP TABLE civic_requests")
-    cur.execute("DROP TABLE assignments")
-    cur.execute("DROP TABLE intake_records")
-    conn.commit()
-    cur.close()
-    conn.close()
+    cleanup(conn)
 
 @pytest.fixture
 def seeded_db(db_conn):
-    data = SeedData()
-    cur = db_conn.cursor()
-    for assignment in data.assignments:
-        cur.execute(
-            """INSERT INTO assignments (meeting_id, meeting_type, body, published_date, materials, status)
-            VALUES (%s, %s, %s, %s, %s, %s)""",
-            (assignment["meeting_id"], assignment["meeting_type"], assignment["body"], assignment["published_date"], assignment["materials"], "pending")
-        )
-    for article in data.articles:
-        cur.execute(
-            """
-            INSERT INTO articles (meeting_id, meeting_date, byline, doc_type, summary, reviewed)
-            VALUES  (%s, %s, %s, %s, %s, FALSE)
-            ON CONFLICT (meeting_id, doc_type) DO UPDATE SET
-                summary = EXCLUDED.summary,
-                meeting_date = EXCLUDED.meeting_date
-            """,
-            (article['meeting_id'], article['meeting_date'], article['byline'], article["doc_type"], json.dumps(article['summary']))
-        )
-    db_conn.commit()
+    seed_db(db_conn)
     yield db_conn
 
 @pytest.fixture
@@ -141,15 +61,16 @@ def mock_provider():
         yield provider
 
 @pytest.fixture
-def client():
-    app.config["TESTING"] = True
-    with app.test_client() as client:
-        yield client
-
-@pytest.fixture
-def empty_client(db_conn):
+def client(db_conn):
     app.config["TESTING"] = True
     with patch("wuiw.app.get_db_connection", return_value=db_conn):
+        with app.test_client() as client:
+            yield client
+
+@pytest.fixture
+def seeded_client(seeded_db):
+    app.config["TESTING"] = True
+    with patch("wuiw.app.get_db_connection", return_value=seeded_db):
         with app.test_client() as client:
             yield client
 
@@ -226,3 +147,28 @@ def mock_email():
         mock_smtp.return_value.__exit__ = MagicMock(return_value=False)
 
         yield mock_smtp
+
+@pytest.fixture
+def admin_client(client):
+    with client.session_transaction() as sess:
+        sess['admin'] = True
+    yield client
+
+@pytest.fixture
+def edit_seeded():
+    data = {
+            "headline": "Town Council Approves $400k Bond, Settles Suit, and Files TPS Reports",
+            "meeting_type": "Regular Meeting",
+            "date": "2026-01-20",            
+            "bullets": [
+                "$400,000 bond for stormwater management program approved unanimously",
+                "Council endorses the proposed 2025 Plan of Conservation and Development",
+                "Public concerns raised about police department staffing and management",
+                "Fire prevention poster contest awards presented to school students",
+                "Upcoming public meetings on automated license plate readers and Senior Olympics announced",
+                "Settlement of Rivers Bend lawsuit agreed upon during Executive Session"
+            ],
+            "blurb": "The Windsor Town Council's meeting on January 20 saw the approval of a $400,000 bond for stormwater management, alongside unanimous endorsement of the updated 2025 Plan of Conservation and Development. Public commentary reflected concerns regarding police staffing and management practices. The council recognized students from local schools for their achievements in fire safety awareness with a poster contest. A settlement regarding the Rivers Bend lawsuit was also discussed and ratified in Executive Session. Additionally, upcoming community events, including a public meeting on automated license plate readers, were highlighted.",
+            "action": "resolve"
+    }
+    return data

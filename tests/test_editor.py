@@ -3,7 +3,7 @@ import pytest
 import psycopg2.extras
 from datetime import datetime
 from unittest.mock import MagicMock, patch
-from wuiw.editor import update_status, save_assignments, open_intake, close_intake, save_ai_log, save_civic_log, send_alert
+from wuiw.editor import update_status, save_assignments, open_intake, close_intake, save_ai_log, save_civic_log, send_alert, update_article
 from wuiw.config import STATUS_PENDING, STATUS_ASSIGNED, STATUS_COMPLETE, STATUS_FAILED, PROVIDER
 from tests.seed import SeedData
 from wuiw.log import ai_log, civic_log
@@ -178,3 +178,39 @@ def test_v06_send_alert(no_sleep_till_brooklyn):
         
         mock_server.login.assert_called_once()
         mock_server.sendmail.assert_called_once()
+
+def test_v07_update_article_pipe(admin_client, seeded_db, edit_seeded):
+    # Check seeded headline
+    cur = seeded_db.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cur.execute("""SELECT summary FROM articles
+                WHERE meeting_id = %s
+                """, ("town_council_1263_2026",))
+    selection = cur.fetchone()
+    assert selection["summary"]["headline"] == "Town Council Approves $400k Bond and Settles Lawsuit"
+
+    # verify seeded article has an unresolved error
+    # Verify error status is resolved
+    cur.execute("""SELECT resolved FROM error_reports
+                WHERE meeting_id = %s
+                """, ("town_council_1263_2026",))
+    status = cur.fetchone()
+    assert status["resolved"] == False
+
+    # Make the update
+    response = admin_client.post("/admin/articles/town_council_1263_2026", data=edit_seeded)
+    assert response.status_code == 302
+    
+    # Verify the edited headline        
+    cur.execute("""SELECT summary FROM articles
+                WHERE meeting_id = %s
+                """, ("town_council_1263_2026",))
+    selection = cur.fetchone()
+    assert selection["summary"]["headline"] == "Town Council Approves $400k Bond, Settles Suit, and Files TPS Reports"
+
+    # Verify error status is resolved
+    cur.execute("""SELECT resolved FROM error_reports
+                WHERE meeting_id = %s
+                """, ("town_council_1263_2026",))
+    status = cur.fetchone()
+    assert status["resolved"] == True
+

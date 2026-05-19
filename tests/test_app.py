@@ -27,21 +27,21 @@ def test_v05_signup(client):
     response = client.get("/signup")
     assert response.status_code == 200
 
-def test_v05_valid_article_id(client):
+def test_v05_valid_article_id(seeded_client):
     data = SeedData()
-    response = client.get(f"/articles/{data.articles[0]['meeting_id']}")
+    response = seeded_client.get(f"/articles/{data.articles[0]['meeting_id']}")
     assert response.status_code == 200
 
 def test_v05_invalid_article_id(client):
     response = client.get("/articles/poop")
     assert response.status_code == 404
 
-def test_v05_index_empty(empty_client):
-    response = empty_client.get("/")
+def test_v05_index_empty(client):
+    response = client.get("/")
     assert response.status_code == 200
 
-def test_v05_articles_empty(empty_client):
-    response = empty_client.get("/articles")
+def test_v05_articles_empty(client):
+    response = client.get("/articles")
     assert response.status_code == 200
 
 @pytest.mark.parametrize("route", ["/", "/about", "/contact", "/support", "/articles"])

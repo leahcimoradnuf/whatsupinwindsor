@@ -15,14 +15,23 @@
             </a>
             <h1>What's Up In Windsor</h1>
             <p>Easy to understand, auto-generated synopsis of what the local government is up to in Windsor, CT.</p>
+            {% if session.get('admin') %}
+            <h3>You are in editor mode</h3>
             <nav>
-                <a href="/about">About</a>
-                <a href="/">Home</a>
-                <!-- <a href="/contact">Contact</a> -->
-                <a href="/support">Support</a>
-                <a href="/articles">Index</a>
-                <a href="/signup">Newsletter</a>
+            <a href="/">View as Public</a>
+            <a href="/admin">Dashboard</a>
+            <a href="/logout">Log Out</a>
             </nav>
+            {% else %}
+            <nav>
+            <a href="/about">About</a>
+            <a href="/">Home</a>
+            <!-- <a href="/contact">Contact</a> -->
+            <a href="/support">Support</a>
+            <a href="/articles">Index</a>
+            <a href="/signup">Newsletter</a>
+            </nav>
+            {% endif %}
             <hr>
         <!-- </div> -->
     </div>

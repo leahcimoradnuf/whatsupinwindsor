@@ -1,5 +1,39 @@
 {% extends "base.html" %}
     {% block content %}
+    {% if session.get("admin") %}
+    <article>
+        <h2>{{ article['summary']['headline'] }}</h2>
+        <h3>{{ article['meeting_type'].title() }}</h3>
+        <p>Summarized by: {{ article['byline'] }} | Date: {{ article['meeting_date'] }}</p>
+        <ul>
+            {% for bullet in article['summary']['bullets'] %}
+                <li>{{ bullet }}</li>
+            {% endfor %}
+        </ul>
+        <p>{{ article['summary']['blurb'] }}</p>
+        <div class="article-links">
+            <a href="/admin/articles/{{ article['meeting_id'] }}">Edit</a>
+            <a href= "{{ article['materials'] }}" target="_blank">Original Documents</a>
+        </div>
+        <form class="quick_edit" action="/admin/articles/{{ article['meeting_id'] }}/approve" method="post">
+            <input type="hidden" name="reviewed" value="{{ 'true' if not article['reviewed'] else 'false' }}">
+            <button type="submit">{% if not article['reviewed'] %}Quick Approve{% else %}Mark as Unreviewed{% endif %}</button>
+        </form>
+        <form class="quick_edit" action="/admin/articles/{{ article['meeting_id' ] }}/publish" method="post">
+            <input type="hidden" name="published" value="{{ 'false' if article['published'] else 'true' }}">
+            <button type="submit">{% if article['published'] %}Unpublish{% else %}Publish{% endif %}</button>
+        </form> 
+        <footer>
+            This is an automated summary of a public document and is not an official town record. For official meeting minutes, see the link above.
+            {% if article['reviewed'] %}
+                This article has been human-reviewed.
+            {% else %}
+                This article has not yet been human-reviewed
+            {% endif %}
+        </footer>
+        <hr>
+    </article>
+    {% else %}
     <article>
         <h2>{{ article['summary']['headline'] }}</h2>
         <h3>{{ article['meeting_type'].title() }}</h3>
@@ -12,7 +46,7 @@
         <p>{{ article['summary']['blurb'] }}</p>
         <div class="article-links">
             <a href= "{{ article['materials'] }}" target="_blank">Original Documents</a>
-            <a href="/report-error">Report Error</a>
+            <a href="/report-error?meeting_id={{ article['meeting_id'] }}">Report Error</a>
         </div>
         <footer>
             This is an automated summary of a public document and is not an official town record. For official meeting minutes, see the link above.
@@ -24,4 +58,5 @@
         </footer>
         <hr>
     </article>
+    {% endif %}
     {% endblock %}
