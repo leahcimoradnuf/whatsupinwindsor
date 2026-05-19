@@ -13,7 +13,7 @@ from functools import wraps
 app = Flask(__name__)
 logger = logging.getLogger(__name__)
 
-app.secret_key = os.environ.get("ADMIN-PASSWORD")
+app.secret_key = os.environ.get("SECRET_KEY")
 
 _run_in_progress = False
 

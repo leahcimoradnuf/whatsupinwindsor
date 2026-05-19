@@ -158,8 +158,10 @@ def seed_db(conn):
     for assignment in data.assignments:
         cur.execute(
             """INSERT INTO assignments (meeting_id, meeting_type, body, published_date, materials, status)
-            VALUES (%s, %s, %s, %s, %s, %s)""",
+            VALUES (%s, %s, %s, %s, %s, %s)
+            ON CONFLICT (meeting_id) DO NOTHING""",
             (assignment["meeting_id"], assignment["meeting_type"], assignment["body"], assignment["published_date"], assignment["materials"], "pending")
+        
         )
     for article in data.articles:
         cur.execute(
