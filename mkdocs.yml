@@ -1,0 +1,12 @@
+site_name: What's Up in Windsor
+nav:
+  - Home: index.md
+  - About: about.md
+  - Contact: contact.md
+  - API: api.md
+theme: 
+  name: readthedocs
+  favicon: img/favicon.svg
+plugins:
+- mkdocstrings:
+    default_handler: python

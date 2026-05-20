@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="description" content="None" />
+      <link rel="shortcut icon" href="img/favicon.ico" />
+    <title>What's Up in Windsor</title>
+    <link rel="stylesheet" href="css/theme.css" />
+    <link rel="stylesheet" href="css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+        <link href="assets/_mkdocstrings.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Home";
+        var mkdocs_page_input_path = "index.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="." class="icon icon-home"> What's Up in Windsor
+        </a>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+                <li class="toctree-l1 current"><a class="reference internal current" href="#">Home</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#system-architecture">System Architecture</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#wuiw.main.main">main</a>
+    </li>
+    </ul>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="about/">About</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="contact/">Contact</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="api/">API</a>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href=".">What's Up in Windsor</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="." class="icon icon-home" aria-label="Docs"></a></li>
+      <li class="breadcrumb-item active">Home</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="welcome-to-the-wuiw-docs">Welcome to the WUiW Docs</h1>
+<p><em>What's Up in Windsor</em> is an online civic archive, built to help busy residents stay informed on local government decisions.</p>
+<h2 id="system-architecture">System Architecture</h2>
+<p>The intent is to make it easier for residents to follow the, lets be honest: less-than-enthralling proceedings of local government. How? </p>
+<ol>
+<li>It requests official meeting documents (minutes, agendas, etc.) from the town's web host.</li>
+<li>It downloads the text and sends it to a Large Language Model for summarization.</li>
+<li>It stores the summary in a local WUiW database.</li>
+<li>Then, the summaries are posted to <a href="https://whatsupinwindsor.com">whatsupinwindsor.com</a> for easy reader digest.</li>
+</ol>
+<p><img alt="WUiW System Architecture Diagram" src="img/System_Architecture.png" /></p>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<a id="wuiw.main.main"></a>
+    <div class="doc doc-contents first">
+
+        <p>Main Pipeline Source Code</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>wuiw/main.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 18</span>
+<span class="normal"> 19</span>
+<span class="normal"> 20</span>
+<span class="normal"> 21</span>
+<span class="normal"> 22</span>
+<span class="normal"> 23</span>
+<span class="normal"> 24</span>
+<span class="normal"> 25</span>
+<span class="normal"> 26</span>
+<span class="normal"> 27</span>
+<span class="normal"> 28</span>
+<span class="normal"> 29</span>
+<span class="normal"> 30</span>
+<span class="normal"> 31</span>
+<span class="normal"> 32</span>
+<span class="normal"> 33</span>
+<span class="normal"> 34</span>
+<span class="normal"> 35</span>
+<span class="normal"> 36</span>
+<span class="normal"> 37</span>
+<span class="normal"> 38</span>
+<span class="normal"> 39</span>
+<span class="normal"> 40</span>
+<span class="normal"> 41</span>
+<span class="normal"> 42</span>
+<span class="normal"> 43</span>
+<span class="normal"> 44</span>
+<span class="normal"> 45</span>
+<span class="normal"> 46</span>
+<span class="normal"> 47</span>
+<span class="normal"> 48</span>
+<span class="normal"> 49</span>
+<span class="normal"> 50</span>
+<span class="normal"> 51</span>
+<span class="normal"> 52</span>
+<span class="normal"> 53</span>
+<span class="normal"> 54</span>
+<span class="normal"> 55</span>
+<span class="normal"> 56</span>
+<span class="normal"> 57</span>
+<span class="normal"> 58</span>
+<span class="normal"> 59</span>
+<span class="normal"> 60</span>
+<span class="normal"> 61</span>
+<span class="normal"> 62</span>
+<span class="normal"> 63</span>
+<span class="normal"> 64</span>
+<span class="normal"> 65</span>
+<span class="normal"> 66</span>
+<span class="normal"> 67</span>
+<span class="normal"> 68</span>
+<span class="normal"> 69</span>
+<span class="normal"> 70</span>
+<span class="normal"> 71</span>
+<span class="normal"> 72</span>
+<span class="normal"> 73</span>
+<span class="normal"> 74</span>
+<span class="normal"> 75</span>
+<span class="normal"> 76</span>
+<span class="normal"> 77</span>
+<span class="normal"> 78</span>
+<span class="normal"> 79</span>
+<span class="normal"> 80</span>
+<span class="normal"> 81</span>
+<span class="normal"> 82</span>
+<span class="normal"> 83</span>
+<span class="normal"> 84</span>
+<span class="normal"> 85</span>
+<span class="normal"> 86</span>
+<span class="normal"> 87</span>
+<span class="normal"> 88</span>
+<span class="normal"> 89</span>
+<span class="normal"> 90</span>
+<span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Main Pipeline Source Code</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Initialize run conditions</span>
+    <span class="n">run_id</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">new_assignments</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">failed_assignments</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">status</span> <span class="o">=</span> <span class="n">STATUS_FAILED</span>
+    <span class="n">error</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">ai_log</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+    <span class="n">civic_log</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">run_id</span> <span class="o">=</span> <span class="n">open_intake</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">())</span>
+        <span class="n">ai_log</span><span class="o">.</span><span class="n">set_run_id</span><span class="p">(</span><span class="n">run_id</span><span class="p">)</span>
+        <span class="n">civic_log</span><span class="o">.</span><span class="n">set_run_id</span><span class="p">(</span><span class="n">run_id</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;WUIW pipeline started&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Fetch RSS feed</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Pinging RSS feed.&quot;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">new_leads</span> <span class="o">=</span> <span class="n">get_rss</span><span class="p">(</span><span class="n">RSS_URL</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Feed parsing failed: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+            <span class="n">status</span> <span class="o">=</span> <span class="n">STATUS_FAILED</span>
+            <span class="n">error</span> <span class="o">=</span> <span class="s2">&quot;Feed parsing failed, see logs for details&quot;</span>
+            <span class="k">raise</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;RSS fetch returned </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">new_leads</span><span class="p">)</span><span class="si">}</span><span class="s2"> new leads&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Enter new assignments to db table: assignments</span>
+        <span class="n">save_assignments</span><span class="p">(</span><span class="n">new_leads</span><span class="p">,</span> <span class="n">run_id</span><span class="o">=</span><span class="n">run_id</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Assignments saved&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Compile a list of pending assignments</span>
+        <span class="n">assignments</span> <span class="o">=</span> <span class="n">assign</span><span class="p">()</span>
+        <span class="n">new_assignments</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">assignments</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">assignments</span><span class="p">)</span><span class="si">}</span><span class="s2"> assignments pending&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Send assignments to reporter to transcribe docs. </span>
+        <span class="c1"># TODO: Parameter doc_type is set to &quot;minutes&quot; for v1.0, update in later versions</span>
+        <span class="k">for</span> <span class="n">assignment</span> <span class="ow">in</span> <span class="n">assignments</span><span class="p">:</span>
+            <span class="n">failed</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">documents</span><span class="p">,</span> <span class="n">status</span><span class="p">,</span> <span class="n">error</span> <span class="o">=</span> <span class="n">fetch_documents</span><span class="p">(</span><span class="n">assignment</span><span class="p">[</span><span class="s2">&quot;materials&quot;</span><span class="p">],</span> <span class="n">doc_type</span><span class="o">=</span><span class="s2">&quot;minutes&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">documents</span><span class="p">:</span>
+                <span class="n">update_status</span><span class="p">(</span><span class="n">assignment</span><span class="p">[</span><span class="s2">&quot;meeting_id&quot;</span><span class="p">],</span> <span class="n">status</span><span class="p">,</span> <span class="n">error</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;fetch_documents failed for </span><span class="si">{</span><span class="n">assignment</span><span class="p">[</span><span class="s1">&#39;meeting_id&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">error</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">failed</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="k">continue</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Fetched </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">documents</span><span class="p">)</span><span class="si">}</span><span class="s2"> documents for </span><span class="si">{</span><span class="n">assignment</span><span class="p">[</span><span class="s1">&#39;meeting_id&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+            <span class="c1"># Summarize documents. </span>
+            <span class="k">for</span> <span class="n">doc_type</span><span class="p">,</span> <span class="n">text</span> <span class="ow">in</span> <span class="n">documents</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">article</span><span class="p">,</span> <span class="n">status</span><span class="p">,</span> <span class="n">error</span> <span class="o">=</span> <span class="n">write_article</span><span class="p">(</span><span class="n">assignment</span><span class="p">[</span><span class="s2">&quot;meeting_id&quot;</span><span class="p">],</span> <span class="n">text</span><span class="p">,</span> <span class="n">doc_type</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">article</span><span class="p">:</span>
+                    <span class="n">update_status</span><span class="p">(</span><span class="n">assignment</span><span class="p">[</span><span class="s2">&quot;meeting_id&quot;</span><span class="p">],</span> <span class="n">status</span><span class="p">,</span> <span class="n">error</span><span class="p">)</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;write_article failed for </span><span class="si">{</span><span class="n">assignment</span><span class="p">[</span><span class="s1">&#39;meeting_id&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">error</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="n">failed</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="k">continue</span>
+                <span class="n">save_articles</span><span class="p">([</span><span class="n">article</span><span class="p">])</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Article saved: </span><span class="si">{</span><span class="n">article</span><span class="p">[</span><span class="s1">&#39;meeting_id&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">doc_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">update_status</span><span class="p">(</span><span class="n">article</span><span class="p">[</span><span class="s2">&quot;meeting_id&quot;</span><span class="p">],</span> <span class="n">status</span><span class="p">,</span> <span class="n">error</span><span class="p">)</span>
+
+            <span class="c1"># count failure</span>
+            <span class="k">if</span> <span class="n">failed</span><span class="p">:</span>
+                <span class="n">failed_assignments</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="k">if</span> <span class="n">failed_assignments</span> <span class="o">==</span> <span class="n">new_assignments</span> <span class="ow">and</span> <span class="n">new_assignments</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">status</span> <span class="o">=</span> <span class="n">STATUS_FAILED</span>
+            <span class="n">error</span> <span class="o">=</span> <span class="s2">&quot;all assignments failed&quot;</span>
+        <span class="k">elif</span> <span class="n">failed_assignments</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">failed_assignments</span> <span class="o">&lt;</span> <span class="n">new_assignments</span><span class="p">:</span>
+            <span class="n">status</span> <span class="o">=</span> <span class="n">STATUS_WARNING</span>
+            <span class="n">error</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">failed_assignments</span><span class="si">}</span><span class="s2"> assignments failed&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">status</span> <span class="o">=</span> <span class="n">STATUS_COMPLETE</span>
+            <span class="n">error</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;WUIW pipeline complete&quot;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">status</span> <span class="o">=</span> <span class="n">STATUS_FAILED</span>
+        <span class="n">error</span> <span class="o">=</span> <span class="s2">&quot;WUIW pipeline failed, see logs for details&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;WUIW pipeline failed. Error: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="c1"># log http/api requests</span>
+        <span class="n">save_civic_log</span><span class="p">(</span><span class="n">civic_log</span><span class="o">.</span><span class="n">info</span><span class="p">)</span>
+        <span class="n">save_ai_log</span><span class="p">(</span><span class="n">ai_log</span><span class="o">.</span><span class="n">info</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">run_id</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;WUIW pipeline not captured in intake_records. It may not have succeeded. Check logs for details.&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">close_intake</span><span class="p">(</span><span class="n">run_id</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(),</span> <span class="n">status</span><span class="p">,</span> <span class="n">new_assignments</span><span class="p">,</span> <span class="n">failed_assignments</span><span class="p">,</span> <span class="n">error</span><span class="o">=</span><span class="n">error</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">status</span> <span class="o">==</span> <span class="n">STATUS_FAILED</span><span class="p">:</span>
+            <span class="n">send_alert</span><span class="p">(</span><span class="n">error</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div><hr />
+<p>See the API refereence for details, and visit <a href="https://whatsupinwindsor.com">www.whatsupinwindsor.com</a> to find out what happened at the last town council meeting in 2 minutes or less.</p>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="about/" class="btn btn-neutral float-right" title="About">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+    
+      <span><a href="about/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = ".";</script>
+    <script src="js/theme_extra.js"></script>
+    <script src="js/theme.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>
+
+<!--
+MkDocs version : 1.6.1
+Build Date UTC : 2026-05-19 19:42:09.097747+00:00
+-->

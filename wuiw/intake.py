@@ -13,6 +13,23 @@ from wuiw.log import civic_log
 logger = logging.getLogger(__name__)
 
 def get_rss(rss_url):
+    """Retrieves new meeting info from Town RSS feed
+
+    Args:
+        rss_url (str): hyperlink to RSS feed
+
+    Raises:
+        Exception: when HTTP response != 200
+
+    Returns:
+        new_entries (lis): list of new entries, each entry is a flat dict with keys {
+                "meeting_id": composite_id,
+                "meeting_type": meeting_type,
+                "body": body,
+                "published_date": pub_date,
+                "materials": url
+                }
+    """
    
     feed = feedparser.parse(rss_url, agent=USER_AGENT, modified=None)
     civic_log.record(datetime.datetime.now(), rss_url, feed.status)
@@ -61,8 +78,16 @@ def get_rss(rss_url):
     return new_entries
 
 def backfill(start, end, body_id):
-    """ Where start and end are date strings in ISO format
-    body_id is int (18 for Windsor TC)"""
+    """Extract old documents and fill db with summaries
+    
+    Args:
+        start (str): start date in ISO format
+        end (str): end date in ISO format
+        body_id (int): numerical ID of the government body to filter for (In Windsor Town Council is 18)
+    
+    Returns:
+        assignments (lis): list of assignment data in the same format as get_rss() output.
+    """
     assignments = []
     base_url = "https://www.windsorct.gov/AgendaCenter/ViewFile/Agenda/_"
     start_date = datetime.date.fromisoformat(start)

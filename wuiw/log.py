@@ -1,4 +1,6 @@
 class CivicRequestLog:
+    """Module Level Singleton for logging HTTP requests to civic urls
+    """
     def __init__(self):
         self.run_id = None
         self.info = []
@@ -14,6 +16,8 @@ class CivicRequestLog:
         self.info.clear()
 
 class AIRequestLog:
+    """Module Level Singleton for logging requests to AI provider API
+    """
     def __init__(self):
         self.run_id = None
         self.info = []

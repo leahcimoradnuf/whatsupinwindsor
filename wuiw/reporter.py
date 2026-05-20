@@ -13,7 +13,6 @@ from datetime import datetime
 logger = getLogger(__name__)
 
 def _transcribe_doc(pdf):
-    """called by fetch_documents()"""
     reader = PdfReader(pdf)
     text = "".join(page.extract_text() for page in reader.pages)
     return text
@@ -21,9 +20,14 @@ def _transcribe_doc(pdf):
 
 def fetch_documents(url, doc_type=None):
     """Use beautiful soup to parse html for urls to pdf(s)
-    url is link to materials page
-    doc_type (list object or None) specifies which docs to return. Default None returns all doc types
-    Returns dict object { doc_type: text }"""
+    
+    Args:
+        url (str): link to town documents
+        doc_type (lis): specifies which type of docs to get
+
+    Returns:
+        documents (tup): tuple with items (documents list, status, error message)
+    """
     response = requests.get(url, headers=HEADERS)
     civic_log.record(datetime.now(), url, response.status_code)
     time.sleep(REQUEST_DELAY)
