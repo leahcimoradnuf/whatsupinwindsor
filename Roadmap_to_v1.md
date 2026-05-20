@@ -210,19 +210,39 @@ scraper_runs (
 
 ---
 
-## v0.9 — Soft Launch (Quiet)
-**Goal:** Prove stability.
+# v0.9 — Soft Launch (Quiet)
 
-**Deliverables:**
+## Goal
+Prove stability while preparing for public launch.
+
+---
+
+## Deliverables
 - Run system for 4–6 weeks
 - Publish summaries consistently
 - Zero downtime
 - Fix small UX issues
 - Tighten About language
+- Send "Letter from the Editor" to subscriber list
+- Draft franchise playbook document
+- Send courtesy notice to town clerk (with Windsor IT cc'd) announcing intent to make public comment at upcoming Town Council meeting
 
-**Definition of Done:**
-- Stable and consistent
+---
+
+## Notes
+- v0.9 is intentionally a waiting and watching milestone — the system runs, you observe, you fix small things
+- The subscriber email and franchise playbook are parallel work that productively fill the stability watching period
+- The town clerk notice is time sensitive — it must go out during v0.9 so there is no surprise at the v1.0 announcement
+- "Letter from the Editor" warms the subscriber base before the public announcement — by v1.0 they are informed insiders, not cold audience members
+
+---
+
+## Definition of Done
+- System stable and consistent for 4–6 weeks
 - Trusted by operator
+- Subscribers have heard from you personally via Letter from the Editor
+- Town clerk is aware of upcoming public announcement
+- Franchise playbook first draft exists
 
 ---
 
