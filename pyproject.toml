@@ -4,6 +4,9 @@ version = "0.1.0"
 description = "WUIW project"
 readme = "README.md"
 requires-python = ">=3.10"
+dependencies =[
+    "mkdocstrings-python",
+]
 
 [build-system]
 requires = ["setuptools"]

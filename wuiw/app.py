@@ -2,7 +2,7 @@ import psycopg2
 import psycopg2.extras
 import os
 import logging
-from flask import Flask, render_template, abort, redirect, url_for
+from flask import Flask, render_template, abort, redirect, url_for, send_from_directory
 from flask import request, session
 from wuiw.config import get_db_connection
 from wuiw.editor import update_article, report_error, approve_article, publish_article
@@ -17,10 +17,19 @@ app.secret_key = os.environ.get("SECRET_KEY")
 
 _run_in_progress = False
 
+SITE_DIR = os.path.join(os.path.dirname(__file__), '..', 'site')
+
 @app.errorhandler(404)
 def page_not_found(error):
     # Renders 'not_available.html' and ensures the response code is 404
     return render_template('not_available.html'), 404
+
+@app.route("/docs/")
+@app.route("/docs/<path:subpath>")
+def docs(subpath="index.html"):
+    if subpath.endswith("/"):
+        subpath = f"{subpath}index.html"
+    return send_from_directory(SITE_DIR, subpath)
 
 @app.route("/")
 def index():

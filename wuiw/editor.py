@@ -11,7 +11,13 @@ from wuiw.config import STATUS_ASSIGNED
 logger = logging.getLogger(__name__)
 
 def update_status(meeting_id, status, error_message=None):
-    """Update status of an assignment in the database"""
+    """Update status of an assignment in the database
+    
+    Args:
+        meeting_id (str): composite meeting id
+        status (str): assignment status as prescribed in config
+        error_message (str): message with info about errors that occured in this assignment upstream
+    """
     conn = None
     cur = None
     try:
@@ -30,7 +36,12 @@ def update_status(meeting_id, status, error_message=None):
        if conn: conn.close()
 
 def save_assignments(rss_assignments, run_id=None):
-    """Add new assignments from intake.get_rss() to the assignments table"""
+    """Add new assignments from intake.get_rss() to the assignments table
+    
+    Args:
+        rss_assignments (lis): List of assignments produced by either intake.get_rss() or intake.backfill()
+        run_id (int): global run id associated with the cron run
+    """
     conn = None
     cur = None
     try:
@@ -59,8 +70,11 @@ def save_assignments(rss_assignments, run_id=None):
         if conn: conn.close()
 
 def assign():
-    """Review db for assignments with status=STATUS_PENDING and send tasks to reporter.fetch_documents()
-    Returns list of dicts"""
+    """Review db for assignments with status=STATUS_PENDING and return them
+    
+    Returns:
+        assignments (lis): list of pending assignments to be sent to reporter
+    """
     conn = None
     cur = None
     try:
@@ -88,7 +102,11 @@ def assign():
     return assignments
 
 def save_articles(articles):
-    """Recieve articles from writer.write_article() and add them to the articles table"""
+    """Recieve articles from writer.write_article() and add them to the articles table
+    
+    Args:
+        articles (lis): list of dicts containing article data ("headline", "summary", etc...)
+    """
     conn = None
     cur = None
     try:
@@ -157,7 +175,10 @@ def close_intake(run_id, stop, status, new_assignments, failed_assignments, erro
 
 def save_civic_log(logs):
     """save outgoing request logs to town servers
-    log is a list of tuples returned by civic_log.info"""
+
+    Args:
+        logs (lis): list of tuples returned by civic_log.info
+    """
     conn = None
     cur = None
     try:
@@ -180,7 +201,10 @@ def save_civic_log(logs):
 
 def save_ai_log(logs):
     """save outgoing request logs to ai providers
-    log is a list of tuples returned by ai_log.info"""
+
+    Args:
+        logs (lis): list of tuples returned by ai_log.info
+    """
     conn = None
     cur = None
     try:
@@ -202,10 +226,10 @@ def save_ai_log(logs):
         if conn: conn.close()
 
 def send_alert(error):
-    """_summary_
+    """Email the developer when the wuiw.main routine fails
 
     Args:
-        error (_type_): _description_
+        error (str): error message
     """
     sender = os.getenv("ALERT_EMAIL")
     password = os.getenv("ALERT_EMAIL_PASSWORD")
@@ -228,27 +252,25 @@ def update_article(meeting_id, updates, resolved=False):
     """saves edits, sets reviewed = True, optionally resolves all open error reports
     updates is type dict and is constructed by the POST route when updates are submitted
 
-    Data structure of updates:
-        {
-        "assignment": {
-            "meeting_type": "Regular Meeting"
-        },
-        "article": {
-            "agenda": {
-                "items": ["items"]
+    Args:
+        meeting_id (str): composite meeting id (example: town_council_1234_2025)
+        updates (dict): constructed by the form in the POST '/admin/articles/<meeting_id>' route
+            {
+            "assignment": {
+                "meeting_type": "Regular Meeting"
             },
-            "minutes": {
-                "meeting_date": "2025-03-01",
-                "headline": "headline",
-                "bullets": ["bullets"],
-                "blurb": "blurb"
+            "article": {
+                "agenda": {
+                    "items": ["items"]
+                },
+                "minutes": {
+                    "meeting_date": "2025-03-01",
+                    "headline": "headline",
+                    "bullets": ["bullets"],
+                    "blurb": "blurb"
+                    }
                 }
             }
-        }
-
-    Args:
-        meeting_id (str): _description_
-        updates (dict): _description_
         resolved (bool, optional): Toggles resolved status. Defaults to False.
 
     """
@@ -298,7 +320,12 @@ def update_article(meeting_id, updates, resolved=False):
     
 
 def report_error(meeting_id, error_text):
-    """inserts a new row to error_reports"""
+    """inserts a new row to error_reports
+    
+    Args:
+        meeting_id (str): composit meeting id
+        error_text (str): error message from the POST '/report-error' route
+    """
     conn = None
     cur = None
     try:
@@ -317,7 +344,7 @@ def report_error(meeting_id, error_text):
     
 
 def publish_article(meeting_id, published=True):
-    """sets published boolean on an assignment"""
+    """toggles published boolean on an assignment"""
     conn = None
     cur = None
     try:
@@ -336,7 +363,7 @@ def publish_article(meeting_id, published=True):
         if conn: conn.close()
 
 def approve_article(meeting_id, reviewed=True):
-    """sets reviewed boolean on an assignment"""
+    """toggles reviewed boolean on an assignment"""
     conn = None
     cur = None
     try:

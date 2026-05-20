@@ -9,23 +9,16 @@ logger = logging.getLogger(__name__)
 REQUIRED_KEYS = ["meeting_date", "headline", "bullets", "blurb"]
 
 def receive_assignment(text, doc_type):
-    """Review text and doc type, validate input before sending to AI Provider
-    - correct format?
-    - chunking needed?
-    """
     pass
 
 def chunk_packet(text, doc_type):
-    """split long text up
-    - modify prompts (tell LLM it's working in chunks)
-    - return list of text chunks to be fed to AI one at a time
-    """
     pass
     
 def review_article(draft):
-    """article should be json_type. If not, store raw data somewhere and fail gracefully (flag for human admin review)
-    Review draft, return article
-    make changes if necessary, add metadata
+    """Run checks on data coming back from AI provider
+   
+    Args:
+        draft (dict): article information created by writer.write_article()
     """
     # check returned object is dictionary
     if not isinstance(draft, dict):
@@ -50,9 +43,17 @@ def review_article(draft):
     return draft, STATUS_COMPLETE, None
 
 # Main routine of writer.py
-def write_article(meeting_id, text, doc_type, chunked=False):
-    """Pass document text along to AI Provider
-    doc_type: dictates prompt (minutes, agenda, voting grid)"""
+def write_article(meeting_id, text, doc_type):
+    """Send document text to journalist for summarization.
+    
+    Args:
+        meeting_id (str): composite meeting id
+        text (str): document text
+        doc_type (str): document type for prompt construction
+    
+    Returns:
+        article (tup): (article dictionary item, status, error message)
+    """
     try:
         provider = get_provider()
         draft, client_status, input_tokens, output_tokens = provider.summarize(text, doc_type)

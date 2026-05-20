@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 def main():
     """
-    Connect to RSS feed for Town Council and summarize new meeting documents
+    Main Pipeline Source Code
     """
     # Initialize run conditions
     run_id = None

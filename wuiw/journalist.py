@@ -51,6 +51,8 @@ class OpenAIProvider:
             return (None, "FAIL", None, None)
     
 class AnthropicProvider:
+    """Class to instantiate Anthropic API client
+    """
     def __init__(self):
         self.client = Anthropic(api_key=ANTHROPIC_API_KEY)
         self.model = "claude-sonnet-4-6"
@@ -58,6 +60,18 @@ class AnthropicProvider:
         self.prompts = {"minutes": MINUTES_FEW_SHOTS[1:]}
 
     def summarize(self, text, doc_type):
+        """Constructs a prompt and summarizes assigned text.
+
+        Args:
+            text (str): body of text downloaded from government document
+            doc_type (str): document type identifier (minutes, agenda, etc..). For constructing prompt.
+
+        Raises:
+            ValueError: When an invalid doc_type is passed
+
+        Returns:
+            response (tup): (response_data, API Status, N_input_tokens, N_output_tokens)
+        """
         if doc_type not in self.prompts:
             raise ValueError(f"Unknown doc_type: {doc_type}")
 
