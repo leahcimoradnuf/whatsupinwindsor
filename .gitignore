@@ -11,5 +11,6 @@ scratch_nb/
 reports/
 *.ipynb
 *.png
+!System_Architecture.png
 queries/
 .Identifier
