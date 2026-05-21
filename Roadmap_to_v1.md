@@ -218,63 +218,113 @@ Prove stability while preparing for public launch.
 ---
 
 ## Deliverables
+
+### System Stability
 - Run system for 4–6 weeks
 - Publish summaries consistently
 - Zero downtime
 - Fix small UX issues
 - Tighten About language
+
+### Open Source Prep
+- Refactor `journalist.py` to read prompt templates from environment variables instead of `config_prompts.py`
+- Add all prompt template values to Railway environment config
+- Confirm production is stable with environment variable approach
+- Run `git filter-repo` to permanently scrub sensitive files from git history
+- Add MIT LICENSE file to repo root
+- Polish README as the public-facing front door
+- Make repo public (as `whatsupinwindsor` — rename to `oliver-network` or equivalent when franchise brand is established)
+
+### Franchise Playbook
+- Draft Franchise Operational Playbook — written in plain English for a layman/prospective franchisee; specific enough for a lawyer to formalize
+- Draft Franchise Agreement Structure — business terms in plain English covering fees, royalties, brand rights, editorial standards, and termination conditions; readable by a lawyer without clarification calls
+
+### Subscriber & Community
 - Send "Letter from the Editor" to subscriber list
-- Draft franchise playbook document
-- Send courtesy notice to town clerk (with Windsor IT cc'd) announcing intent to make public comment at upcoming Town Council meeting
+- Continue Facebook group engagement
+- Neighborhood flyer walk (if not already completed)
+
+### Pre-Launch Courtesy
+- Send courtesy notice to town clerk (Windsor IT cc'd) announcing intent to make public comment at upcoming Town Council meeting — send at least one week before the meeting
 
 ---
 
 ## Notes
 - v0.9 is intentionally a waiting and watching milestone — the system runs, you observe, you fix small things
-- The subscriber email and franchise playbook are parallel work that productively fill the stability watching period
-- The town clerk notice is time sensitive — it must go out during v0.9 so there is no surprise at the v1.0 announcement
+- Open source prep, franchise playbook, and subscriber outreach are parallel work that productively fill the stability watching period
+- **Environment variable order of operations:** refactor `journalist.py` → add values to Railway → confirm production stable → THEN run `git filter-repo`. Do not scrub history until production is confirmed stable with the new approach
+- The town clerk notice is time sensitive — must go out during v0.9 so there is no surprise at the v1.0 announcement
 - "Letter from the Editor" warms the subscriber base before the public announcement — by v1.0 they are informed insiders, not cold audience members
+- Franchise playbook "done enough" definition: written for a layman, readable by a lawyer. Not final, not legally reviewed — complete enough to hand to a first franchisee candidate as a starting point
+- Public repo ships as `whatsupinwindsor` — rename to network brand (Oliver Network or equivalent) when franchise model becomes active
 
 ---
 
 ## Definition of Done
 - System stable and consistent for 4–6 weeks
 - Trusted by operator
+- `journalist.py` reading prompt templates from environment variables
+- Git history scrubbed, repo public, MIT licensed
 - Subscribers have heard from you personally via Letter from the Editor
 - Town clerk is aware of upcoming public announcement
-- Franchise playbook first draft exists
+- Franchise Operational Playbook first draft exists
+- Franchise Agreement Structure first draft exists
 
 ---
 
-## v1.0 — Public MVP Launch
-**Scope:**
+# v1.0 — Public MVP Launch
+
+## Scope
 - Town Council only
 - Published minutes only
-- Clean AI summaries
+- Clean AI summaries with human review layer
 - PostgreSQL-backed
 - Minimal HTML/CSS
-- IT aware
+- Repo public and MIT licensed
+- IT aware and courtesy noticed
 
-**Launch Requirements:**
+---
+
+## Launch Requirements
+
+### Technical
 - Remove (DEV) from User-Agent
-- Production User-Agent:
-  - WUIW Civic Summary Bot +yourdomain.com/contact
+- Production User-Agent: `WUIW Civic Summary Bot +whatsupinwindsor.com/contact`
 - Scraper runs once daily
 - robots.txt honored
-- Courtesy follow-up note to IT: now live, daily schedule
 
-**Launch Actions:**
-- Announce publicly
-- Share with local weekly paper
-- Share with civic groups
+### Pre-Launch
+- Town clerk courtesy notice sent during v0.9 ✓
+- Repo public and scrubbed ✓
+- Letter from the Editor sent to subscribers ✓
+
+---
+
+## Launch Actions
+- 90-second public comment announcement at Town Council meeting
+- Courtesy follow-up email to Windsor IT: now live, daily schedule
+- Share with Windsor Friends & Neighbors Facebook group
+- Share with Windsor Small Business Facebook group
+- Share with local weekly paper (Windsor Journal) — weekly column pitch
+- Outreach to Windsor Historical Society
 - Add voluntary support link (carefully framed)
+- Post v1.0 outreach list:
+  - Mortgage broker — founding sponsor conversation
+  - Local paper — weekly column pitch
+  - Windsor Historical Society — partnership/credibility conversation
+  - First Town Downtown — warm lead, digest already subscribed
+  - Realtor — second sponsor after due diligence
 
-**Definition of Done:**
+---
+
+## Definition of Done
 - Publicly accessible
 - Stable
 - Clear scope
 - Unmistakably well-behaved scraper
+- Repo public, MIT licensed, history clean
 - No feature creep
+- At least one post-launch sponsor conversation initiated
 
 ---
 
