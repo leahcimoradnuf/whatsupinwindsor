@@ -69,6 +69,12 @@ class SeedData:
             }
         ]
 
+    def load_prompts(self, file):
+        with open(file, 'r') as f:
+            prompts = json.loads(f.read())
+        return prompts
+
+
 def spool_up(url):
     print("connect() called")
     try:
@@ -145,6 +151,23 @@ def create_tables(conn):
         resolved BOOLEAN DEFAULT FALSE
         );"""
         )
+    cur.execute(
+        """CREATE TABLE IF NOT EXISTS system_prompts (
+        id SERIAL PRIMARY KEY,
+        doc_type TEXT NOT NULL,
+        content TEXT NOT NULL
+        );"""
+        )
+    cur.execute(
+        """CREATE TABLE IF NOT EXISTS few_shot_examples (
+        id SERIAL PRIMARY KEY,
+        doc_type TEXT NOT NULL,
+        document_text TEXT NOT NULL,
+        meeting_date DATE,
+        expected_output JSONB NOT NULL
+        );"""
+        )
+
     conn.commit()
     cur.close()
 
@@ -153,6 +176,7 @@ def seed_db(conn):
     cur = conn.cursor()
     # get seed data
     data = SeedData()
+    prompts = data.load_prompts("./wuiw/prompts.json")
 
     # seed data
     for assignment in data.assignments:
@@ -180,6 +204,26 @@ def seed_db(conn):
             VALUES (%s, %s)""",
             (error['meeting_id'], error['report_text'])
         )
+    
+    for system_prompt in prompts["minutes"]["system"]:
+        cur.execute(
+            """INSERT INTO system_prompts (doc_type, content)
+            VALUES (%s, %s)""",
+            ("minutes", system_prompt)
+        )
+    
+    for few_shot in prompts["minutes"]["examples"]:
+        expected_output = {
+            "meeting_date": few_shot["meeting_date"],
+            "headline": few_shot["headline"],
+            "bullets": few_shot["bullets"],
+            "blurb": few_shot["blurb"]
+        }
+        cur.execute(
+            """INSERT INTO few_shot_examples (doc_type, document_text, meeting_date, expected_output)
+            VALUES (%s, %s, %s, %s)""",
+            ("minutes", few_shot["minutes_text"], few_shot["meeting_date"], json.dumps(expected_output))
+        )
 
     conn.commit()
     cur.close()
@@ -194,6 +238,8 @@ def cleanup(conn):
     cur.execute("DROP TABLE civic_requests")
     cur.execute("DROP TABLE assignments")
     cur.execute("DROP TABLE intake_records")
+    cur.execute("DROP TABLE system_prompts")
+    cur.execute("DROP TABLE few_shot_examples")
     conn.commit()
     cur.close()
     conn.close()

@@ -14,3 +14,4 @@ reports/
 !System_Architecture.png
 queries/
 .Identifier
+prompts.json
