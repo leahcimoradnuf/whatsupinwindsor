@@ -1,8 +1,11 @@
 import os
 import logging
 import json
+import psycopg2
+import psycopg2.extras
 from openai import OpenAI
 from anthropic import Anthropic
+from wuiw.config import get_db_connection
 from wuiw.config_prompts import EXAMPLE_MINUTES, EXAMPLE_HEADLINE, EXAMPLE_BULLETS, EXAMPLE_BLURB, EXAMPLE_MEETING_DATE
 
 
@@ -11,7 +14,19 @@ logger = logging.getLogger(__name__)
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
 
-[REDACTED]
+# Query system prompts and few shots
+conn = get_db_connection()
+cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+cur.execute(
+    """SELECT doc_type, content FROM system_prompts"""
+    )
+SYSTEM_PROMPTS = cur.fetchall()
+cur.execute(
+    """SELECT doc_type, document_text, meeting_date, expected_output FROM few_shot_examples"""
+)
+FEW_SHOTS = cur.fetchall()
+cur.close()
+conn.close()
 
 class OpenAIProvider:
     def __init__(self):
@@ -56,7 +71,7 @@ class AnthropicProvider:
     def __init__(self):
         self.client = Anthropic(api_key=ANTHROPIC_API_KEY)
         self.model = "claude-sonnet-4-6"
-        self.system = {"minutes": MINUTES_FEW_SHOTS[0]["content"]}
+        self.system = SYSTEM_PROMPTS
         self.prompts = {"minutes": MINUTES_FEW_SHOTS[1:]}
 
     def summarize(self, text, doc_type):
