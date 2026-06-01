@@ -2,7 +2,10 @@ import psycopg2
 import os
 import json
 
-# assignments data
+# data
+
+PROMPTS = "/home/mike/myprojects/whatsupinwindsor/wuiw/prompts.json"
+
 class SeedData:
     def __init__(self):
         self.assignments = [
@@ -86,6 +89,7 @@ def spool_up(url):
     return conn
 
 def create_tables(conn):
+    print("create_tables() called")
     # create tables
     cur = conn.cursor()
     cur.execute(
@@ -173,10 +177,11 @@ def create_tables(conn):
 
 
 def seed_db(conn):
+    print("seed_db() called")
     cur = conn.cursor()
     # get seed data
     data = SeedData()
-    prompts = data.load_prompts("./wuiw/prompts.json")
+    prompts = data.load_prompts(PROMPTS)
 
     # seed data
     for assignment in data.assignments:
@@ -205,11 +210,12 @@ def seed_db(conn):
             (error['meeting_id'], error['report_text'])
         )
     
-    for system_prompt in prompts["minutes"]["system"]:
-        cur.execute(
+    # System prompt for minutes
+    # TODO build out for other doc types when necessary
+    cur.execute(
             """INSERT INTO system_prompts (doc_type, content)
             VALUES (%s, %s)""",
-            ("minutes", system_prompt)
+            ("minutes", prompts["minutes"]["system"])
         )
     
     for few_shot in prompts["minutes"]["examples"]:

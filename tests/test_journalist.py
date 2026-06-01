@@ -3,7 +3,7 @@ import pytest
 from wuiw.config import get_provider
 from unittest.mock import patch, MagicMock
 
-def test_v06_anthropic_token_count(mock_anthropic_client):
+def test_v06_anthropic_token_count(mock_anthropic_client, seeded_db):
     with patch.dict(os.environ, {"PROVIDER": "Anthropic"}):
         provider = get_provider()
         text = "summarize me"
@@ -26,7 +26,7 @@ def test_v06_openai_token_count(mock_openai_client):
     assert result[2] == 100
     assert result[3] == 10
 
-def test_v06_anthropic_fail():
+def test_v06_anthropic_fail(seeded_db):
     with patch("wuiw.journalist.Anthropic") as mock_anthropic:
         mock_client = MagicMock()
         mock_anthropic.return_value = mock_client
