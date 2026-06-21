@@ -15,3 +15,5 @@ reports/
 queries/
 .Identifier
 prompts.json
+*.sql
+update_sql.sh

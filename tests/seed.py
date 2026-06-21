@@ -158,18 +158,19 @@ def create_tables(conn):
     cur.execute(
         """CREATE TABLE IF NOT EXISTS system_prompts (
         id SERIAL PRIMARY KEY,
-        doc_type TEXT NOT NULL,
+        doc_type TEXT UNIQUE NOT NULL,
         content TEXT NOT NULL
         );"""
         )
     cur.execute(
         """CREATE TABLE IF NOT EXISTS few_shot_examples (
         id SERIAL PRIMARY KEY,
+        meeting_id TEXT UNIQUE NOT NULL,
         doc_type TEXT NOT NULL,
         document_text TEXT NOT NULL,
         meeting_date DATE,
-        expected_output JSONB NOT NULL
-        );"""
+        expected_output JSONB NOT NULL,
+        UNIQUE (meeting_id, doc_type));;"""
         )
 
     conn.commit()
@@ -214,21 +215,30 @@ def seed_db(conn):
     # TODO build out for other doc types when necessary
     cur.execute(
             """INSERT INTO system_prompts (doc_type, content)
-            VALUES (%s, %s)""",
+            VALUES (%s, %s)
+            ON CONFLICT (doc_type) DO UPDATE SET
+                content = EXCLUDED.content
+            """,
             ("minutes", prompts["minutes"]["system"])
         )
     
     for few_shot in prompts["minutes"]["examples"]:
+        doc_type = "minuets"
         expected_output = {
             "meeting_date": few_shot["meeting_date"],
+            "meeting_id": few_shot["meeting_id"],
             "headline": few_shot["headline"],
             "bullets": few_shot["bullets"],
             "blurb": few_shot["blurb"]
         }
         cur.execute(
-            """INSERT INTO few_shot_examples (doc_type, document_text, meeting_date, expected_output)
-            VALUES (%s, %s, %s, %s)""",
-            ("minutes", few_shot["minutes_text"], few_shot["meeting_date"], json.dumps(expected_output))
+            """INSERT INTO few_shot_examples (meeting_id, doc_type, document_text, meeting_date, expected_output)
+            VALUES (%s, %s, %s, %s, %s)
+            ON CONFLICT (meeting_id) DO UPDATE SET
+                document_text = EXCLUDED.document_text,
+                expected_output = EXCLUDED.expected_output
+            """,
+            (few_shot["meeting_id"], doc_type, few_shot["minutes_text"], few_shot["meeting_date"], json.dumps(expected_output))
         )
 
     conn.commit()
