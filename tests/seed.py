@@ -223,7 +223,7 @@ def seed_db(conn):
         )
     
     for few_shot in prompts["minutes"]["examples"]:
-        doc_type = "minuets"
+        doc_type = "minutes"
         expected_output = {
             "meeting_date": few_shot["meeting_date"],
             "meeting_id": few_shot["meeting_id"],

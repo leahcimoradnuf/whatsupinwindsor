@@ -1,6 +1,7 @@
 import os
 import pytest
 from wuiw.config import get_provider
+from wuiw.journalist import _build_prompts
 from unittest.mock import patch, MagicMock
 
 def test_v06_anthropic_token_count(mock_anthropic_client, seeded_db):
@@ -45,3 +46,8 @@ def test_v06_anthropic_fail(seeded_db):
         assert result[1] == "FAIL"
         assert result[2] is None
         assert result[3] is None
+
+def test_v09_build_prompts(seeded_db):
+    system, examples = _build_prompts("minutes")
+    assert system !=0
+    assert examples !=0
