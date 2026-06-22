@@ -10,13 +10,15 @@
 <body>
     <!-- <div class="container"> -->
         <div class="head">
-            <picture>
-                <!-- Rules for Dark Mode -->
-                <source srcset="/static/townhall_inverted.png" media="(prefers-color-scheme: dark)">
-                
-                <!-- Default Fallback (Light Mode) -->
-                <img src="/static/townhall.png" alt="Description of the image">
-            </picture>
+            <a href="/">
+                <picture class="town-hall">
+                    <!-- Rules for Dark Mode -->
+                    <source srcset="/static/townhall_inverted.png" media="(prefers-color-scheme: dark)">
+                    
+                    <!-- Default Fallback (Light Mode) -->
+                    <img src="/static/townhall.png" alt="Description of the image">
+                </picture>
+            </a>
             <h1>What's Up In Windsor</h1>
             <p>Easy to understand, auto-generated synopsis of what the local government is up to in Windsor, CT.</p>
             {% if session.get('admin') %}
