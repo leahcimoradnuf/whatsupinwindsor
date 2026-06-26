@@ -6,7 +6,6 @@ import psycopg2.extras
 from openai import OpenAI
 from anthropic import Anthropic
 from wuiw.config import get_db_connection
-from wuiw.config_prompts import EXAMPLE_MINUTES, EXAMPLE_HEADLINE, EXAMPLE_BULLETS, EXAMPLE_BLURB, EXAMPLE_MEETING_DATE
 
 
 logger = logging.getLogger(__name__)
