@@ -10,7 +10,8 @@ __pycache__/
 scratch_nb/
 reports/
 *.ipynb
-*.png
+logo_small.png
+qr.png
 !System_Architecture.png
 queries/
 .Identifier
