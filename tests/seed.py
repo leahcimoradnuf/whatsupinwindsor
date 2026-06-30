@@ -2,7 +2,10 @@ import psycopg2
 import os
 import json
 
-# assignments data
+# data
+
+PROMPTS = "/home/mike/myprojects/whatsupinwindsor/wuiw/prompts.json"
+
 class SeedData:
     def __init__(self):
         self.assignments = [
@@ -69,6 +72,12 @@ class SeedData:
             }
         ]
 
+    def load_prompts(self, file):
+        with open(file, 'r') as f:
+            prompts = json.loads(f.read())
+        return prompts
+
+
 def spool_up(url):
     print("connect() called")
     try:
@@ -80,6 +89,7 @@ def spool_up(url):
     return conn
 
 def create_tables(conn):
+    print("create_tables() called")
     # create tables
     cur = conn.cursor()
     cur.execute(
@@ -145,14 +155,34 @@ def create_tables(conn):
         resolved BOOLEAN DEFAULT FALSE
         );"""
         )
+    cur.execute(
+        """CREATE TABLE IF NOT EXISTS system_prompts (
+        id SERIAL PRIMARY KEY,
+        doc_type TEXT UNIQUE NOT NULL,
+        content TEXT NOT NULL
+        );"""
+        )
+    cur.execute(
+        """CREATE TABLE IF NOT EXISTS few_shot_examples (
+        id SERIAL PRIMARY KEY,
+        meeting_id TEXT UNIQUE NOT NULL,
+        doc_type TEXT NOT NULL,
+        document_text TEXT NOT NULL,
+        meeting_date DATE,
+        expected_output JSONB NOT NULL,
+        UNIQUE (meeting_id, doc_type));;"""
+        )
+
     conn.commit()
     cur.close()
 
 
 def seed_db(conn):
+    print("seed_db() called")
     cur = conn.cursor()
     # get seed data
     data = SeedData()
+    prompts = data.load_prompts(PROMPTS)
 
     # seed data
     for assignment in data.assignments:
@@ -180,6 +210,36 @@ def seed_db(conn):
             VALUES (%s, %s)""",
             (error['meeting_id'], error['report_text'])
         )
+    
+    # System prompt for minutes
+    # TODO build out for other doc types when necessary
+    cur.execute(
+            """INSERT INTO system_prompts (doc_type, content)
+            VALUES (%s, %s)
+            ON CONFLICT (doc_type) DO UPDATE SET
+                content = EXCLUDED.content
+            """,
+            ("minutes", prompts["minutes"]["system"])
+        )
+    
+    for few_shot in prompts["minutes"]["examples"]:
+        doc_type = "minutes"
+        expected_output = {
+            "meeting_date": few_shot["meeting_date"],
+            "meeting_id": few_shot["meeting_id"],
+            "headline": few_shot["headline"],
+            "bullets": few_shot["bullets"],
+            "blurb": few_shot["blurb"]
+        }
+        cur.execute(
+            """INSERT INTO few_shot_examples (meeting_id, doc_type, document_text, meeting_date, expected_output)
+            VALUES (%s, %s, %s, %s, %s)
+            ON CONFLICT (meeting_id) DO UPDATE SET
+                document_text = EXCLUDED.document_text,
+                expected_output = EXCLUDED.expected_output
+            """,
+            (few_shot["meeting_id"], doc_type, few_shot["minutes_text"], few_shot["meeting_date"], json.dumps(expected_output))
+        )
 
     conn.commit()
     cur.close()
@@ -194,6 +254,8 @@ def cleanup(conn):
     cur.execute("DROP TABLE civic_requests")
     cur.execute("DROP TABLE assignments")
     cur.execute("DROP TABLE intake_records")
+    cur.execute("DROP TABLE system_prompts")
+    cur.execute("DROP TABLE few_shot_examples")
     conn.commit()
     cur.close()
     conn.close()

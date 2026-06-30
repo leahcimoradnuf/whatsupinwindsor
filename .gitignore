@@ -15,5 +15,6 @@ qr.png
 !System_Architecture.png
 queries/
 .Identifier
+prompts.json
 *.sql
-*.sh
+update_sql.sh
