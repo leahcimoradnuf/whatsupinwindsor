@@ -85,4 +85,3 @@ urllib3==2.6.3
 watchdog==6.0.0
 wcwidth==0.6.0
 Werkzeug==3.1.6
--e git+https://github.com/leahcimoradnuf/whatsupinwindsor.git@9af052d0a1a1e55907c434bf91c93d31d360e018#egg=wuiw
