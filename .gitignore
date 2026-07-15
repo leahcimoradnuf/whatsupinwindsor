@@ -18,3 +18,4 @@ queries/
 prompts.json
 *.sql
 update_sql.sh
+scrub_repo.sh
