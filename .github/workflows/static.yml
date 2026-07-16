@@ -16,6 +16,6 @@ jobs:
         with:
           python-version: '3.11'
       - name: Install dependencies
-        run: pip install mkdocs mkdocs-material mkdocstrings[python]
+        run: pip install mkdocs mkdocs-material mkdocstrings[python] mkdocs-autorefs
       - name: Deploy
         run: mkdocs gh-deploy --force
