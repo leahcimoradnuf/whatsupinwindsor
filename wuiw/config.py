@@ -24,6 +24,13 @@ def get_db_connection():
 
 
 # Classification Data
+CLASSIFICATIONS = {
+    "windsorct": {
+        "doc_type": {"voting grid": "voting_grid", "minutes": "minutes", "agenda": "agenda", "action grid": "voting_grid", "unapproved minutes": "minutes", "meeting minutes": "minutes", "draft minutes": "minutes", "grid": "voting_grid"},
+        "municipal_body": {"town council": "town_council", "planning commission": "planning_commission", "board of education": "board_of_education"},
+        "meeting_type": {"regular meeting": "regular_meeting", "public hearing": "public_hearing", "special meeting": "special_meeting"}
+    }
+}
 DOCUMENT_TYPES = ["Agenda", "Minutes", "Votes"]
 MUNICIPAL_BODIES = ["Town Council", "Planning Commission", "Board of Education"] #TODO expand this to cover all bodies of govt
 MEETING_TYPES = ["Regular Meeting", "Public Hearing", "Special Meeting"]

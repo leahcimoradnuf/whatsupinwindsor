@@ -49,9 +49,9 @@ def get_rss(rss_url):
             id_parts = entry["id"].split("/")
             meeting_id = id_parts[-2]
             title = entry["title"]
-            body = classify(title, MUNICIPAL_BODIES)
+            body = classify(title, town_id="windsorct", class_type="municipal_body")
             body = "_".join(body.lower().split())
-            meeting_type = classify(title, MEETING_TYPES, meeting_type_fallback=True)
+            meeting_type = classify(title, town_id="windsorct", class_type="meeting_type", fallback=True)
             year = entry["published_parsed"][0]
             month = entry["published_parsed"][1]
             day = entry["published_parsed"][2]
@@ -105,9 +105,9 @@ def backfill(start, end, body_id):
     soup = BeautifulSoup(response.text, 'html.parser')
     leads = soup.select('td p a[id]')
     for lead in leads:
-        body = classify(lead.text, MUNICIPAL_BODIES)
+        body = classify(lead.text, town_id="windsorct", class_type="municipal_body")
         body = "_".join(body.lower().split())
-        meeting_type = classify(lead.text, MEETING_TYPES)
+        meeting_type = classify(lead.text, town_id="windsorct", class_type="meeting_type", fallback=True)
         month = lead["id"][0:2]
         day = lead["id"][2:4]
         year = lead["id"][4:8]

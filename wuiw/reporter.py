@@ -44,7 +44,7 @@ def fetch_documents(url, doc_type=None):
     target_docs = {}
     for item in items:
         title = item.find('h1', class_='title').text.strip()
-        detected_type = classify(title, DOCUMENT_TYPES, doc_type_fallback=True)
+        detected_type = classify(title, town_id="windsorct", class_type="doc_type", fallback=True)
         href = item.find('a')['href']
         doc_url = href if href.startswith("http") else f"https://www.windsorct.gov{href}"
         target_docs[detected_type] = doc_url

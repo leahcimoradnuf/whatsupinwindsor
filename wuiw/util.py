@@ -1,15 +1,15 @@
 import logging
 from rapidfuzz import process
+from wuiw.config import CLASSIFICATIONS # TODO build alias map in config.py
 
 logger = logging.getLogger(__name__)
 
-def classify(title, classifications, threshold=80, doc_type_fallback=False, meeting_type_fallback=False):
-    match, score, _ = process.extractOne(title.lower(), [c.lower() for c in classifications])
+def classify(title, town_id=None, class_type=None, threshold=80, fallback=True):
+    match, score, _ = process.extractOne(title.lower(), [c.lower() for c in list(CLASSIFICATIONS[town_id][class_type].keys())])
     if score >= threshold:
-        return match
+        return CLASSIFICATIONS[town_id][class_type][match]
 
-    if doc_type_fallback:
-        title_lower = title.lower()
+    def doc_type_fallback(title_lower):
         if "minutes" in title_lower:
             return "minutes"
         elif "agenda" in title_lower:
@@ -17,14 +17,26 @@ def classify(title, classifications, threshold=80, doc_type_fallback=False, meet
         elif "voting" in title_lower:
             return "voting_grid"
 
-    if meeting_type_fallback:
-        title_lower = title.lower()
+    def meeting_type_fallback(title_lower):
         if "regular" in title_lower:
             return "regular meeting"
         elif "special" in title_lower:
             return "special meeting"
         elif "hearing" in title_lower:
             return "public hearing"
+        
+    def body_type_fallback(title_lower):
+        pass
+   
+
+    dispatch_fallback = {
+        "doc_type": doc_type_fallback,
+        "municipal_body": body_type_fallback,
+        "meeting_type": meeting_type_fallback
+    }
+
+    if fallback:
+        dispatch_fallback[class_type](title.lower())
 
     logger.warning("Could not classify from title: %s", title)
     return "unclassified"

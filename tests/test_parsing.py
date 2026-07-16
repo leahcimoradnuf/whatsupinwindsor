@@ -69,9 +69,9 @@ def test_v01_classify_body():
     
     bodies = []
     for entry in entries:
-        bodies.append(classify(entry, MUNICIPAL_BODIES, threshold=75))
+        bodies.append(classify(entry, town_id="windsorct", class_type="municipal_body", threshold=75))
 
-    assert bodies == ["town council", "town council", "planning commission", "unclassified"]
+    assert bodies == ["town_council", "town_council", "planning_commission", "unclassified"]
 
 def test_v06_get_rss_records_civic_log():
     civic_log.reset()
