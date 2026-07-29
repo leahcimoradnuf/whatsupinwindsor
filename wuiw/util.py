@@ -16,6 +16,12 @@ def classify(title, town_id=None, class_type=None, threshold=80, fallback=True):
             return "agenda"
         elif "voting" in title_lower:
             return "voting_grid"
+        elif "grid" in title_lower:
+            return "voting_grid"
+        elif "action" in title_lower:
+            return "voting_grid"
+        elif title_lower.endswith("-vg"):
+            return "voting_grid"
 
     def meeting_type_fallback(title_lower):
         if "regular" in title_lower:
@@ -36,7 +42,9 @@ def classify(title, town_id=None, class_type=None, threshold=80, fallback=True):
     }
 
     if fallback:
-        dispatch_fallback[class_type](title.lower())
+        classification = dispatch_fallback[class_type](title.lower())
+        if classification:
+            return classification
 
     logger.warning("Could not classify from title: %s", title)
     return "unclassified"

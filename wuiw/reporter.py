@@ -48,6 +48,8 @@ def fetch_documents(url, doc_type=None):
         href = item.find('a')['href']
         doc_url = href if href.startswith("http") else f"https://www.windsorct.gov{href}"
         target_docs[detected_type] = doc_url
+
+    #TODO check target_docs.keys() against list of supported doc_types (from config.py) and count available documents
     
     keys = [doc_type] if doc_type is not None else target_docs.keys()
 
@@ -68,7 +70,7 @@ def fetch_documents(url, doc_type=None):
         text = _transcribe_doc(pdf_stream)
         documents[key] = text
 
-    return (documents, STATUS_ASSIGNED, None)
+    return (documents, STATUS_ASSIGNED, None) #TODO add available_documents integer to return data
    
 def fetch_audio():
     pass

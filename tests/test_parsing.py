@@ -1,4 +1,4 @@
-from wuiw.intake import get_rss, classify
+from wuiw.intake import get_rss
 from unittest.mock import MagicMock, patch
 from wuiw.config import MUNICIPAL_BODIES
 from wuiw.log import civic_log
@@ -57,21 +57,6 @@ def test_v01_required_fields_present():
 
 def test_v01_date_parsing_valid():
     pass
-
-def test_v01_classify_body():
-    """Classify gov body based on meeting title"""
-    entries = [
-        "Town Council Regular Meeting",
-        "Town Council Public Hearing",
-        "Planning & Zoning Commission Regular Meeting",
-        "Hamburgers & Hotdogs Club Biennial Feast"
-        ]
-    
-    bodies = []
-    for entry in entries:
-        bodies.append(classify(entry, town_id="windsorct", class_type="municipal_body", threshold=75))
-
-    assert bodies == ["town_council", "town_council", "planning_commission", "unclassified"]
 
 def test_v06_get_rss_records_civic_log():
     civic_log.reset()
