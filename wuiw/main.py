@@ -1,8 +1,8 @@
 import logging
 from datetime import datetime
 from wuiw.intake import get_rss
-from wuiw.config import RSS_URL, STATUS_COMPLETE, STATUS_WARNING, STATUS_FAILED
-from wuiw.editor import save_articles, save_assignments, update_status, assign, open_intake, close_intake, save_ai_log, save_civic_log, send_alert
+from wuiw.config import RSS_URL, STATUS_COMPLETE, STATUS_WARNING, STATUS_FAILED, STATUS_PARTIAL
+from wuiw.editor import save_articles, save_assignments, update_status, assign, open_intake, close_intake, save_ai_log, save_civic_log, send_alert, record_document_count
 from wuiw.reporter import fetch_documents
 from wuiw.writer import write_article
 from wuiw.log import ai_log, civic_log
@@ -50,33 +50,45 @@ def main():
         logger.info(f"Assignments saved")
 
         # Compile a list of pending assignments
-        assignments = assign()
+        assignments = assign() #TODO may need to update this to collect and check partial assignments as well
         new_assignments = len(assignments)
         logger.info(f"{len(assignments)} assignments pending")
 
         # Send assignments to reporter to transcribe docs. 
         # TODO: Parameter doc_type is set to "minutes" for v1.0, update in later versions
         for assignment in assignments:
+            summarized = 0
             failed = False
-            documents, status, error = fetch_documents(assignment["materials"], doc_type="minutes")
+            documents, status, error, count = fetch_documents(assignment["materials"], doc_type="minutes")
             if not documents:
                 update_status(assignment["meeting_id"], status, error)
                 logger.warning(f"fetch_documents failed for {assignment['meeting_id']}: {error}")
                 failed = True
                 continue
-            logger.info(f"Fetched {len(documents)} documents for {assignment['meeting_id']}")
+            logger.info(f"Fetched {len(documents)} documents for {assignment['meeting_id']}") 
+            #TODO here is where available_documents is recorded
+            record_document_count(available=count)
 
             # Summarize documents. 
             for doc_type, text in documents.items():
-                article, status, error = write_article(assignment["meeting_id"], text, doc_type)
+                article, status, error = write_article(assignment["meeting_id"], text, doc_type) #TODO write_article status should be returned as succeeded/failed, separate from assignments table
                 if not article:
-                    update_status(assignment["meeting_id"], status, error)
-                    logger.warning(f"write_article failed for {assignment['meeting_id']}: {error}")
-                    failed = True
+                    # update_status(assignment["meeting_id"], status, error)
+                    logger.warning(f"write_article failed for {assignment['meeting_id']} {doc_type}: {error}")
+                    # failed = True
                     continue
                 save_articles([article])
+                summarized += 1
                 logger.info(f"Article saved: {article['meeting_id']} {doc_type}")
-                update_status(article["meeting_id"], status, error)
+
+            # Document count vs. available status logic
+            record_document_count(summarized=summarized)
+            if summarized >= 0 and summarized < count:
+                status = STATUS_PARTIAL
+            elif summarized == count:
+                status = STATUS_COMPLETE
+
+            update_status(article["meeting_id"], status, error) #TODO here is where documents_summarized is recorded
             
             # count failure
             if failed:

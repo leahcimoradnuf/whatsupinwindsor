@@ -53,6 +53,11 @@ def write_article(meeting_id, text, doc_type):
     
     Returns:
         article (tup): (article dictionary item, status, error message)
+
+    Status tree:
+    - SUCCESS: completed successfully
+    - RETRY: failed in retry-able manner (drives assignment status to STATUS_PARTIAL)
+    - FAILED: unrecoverable failure (blank or corrupt document, removes document from "available" count)
     """
     try:
         provider = get_provider()

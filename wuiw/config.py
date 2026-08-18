@@ -41,6 +41,7 @@ STATUS_ASSIGNED = "assigned"
 STATUS_COMPLETE = "complete"
 STATUS_FAILED = "failed"
 STATUS_WARNING = "warning"
+STATUS_PARTIAL = "partial"
 
 # Journalists
 PROVIDER = os.getenv("PROVIDER") 

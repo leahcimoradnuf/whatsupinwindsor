@@ -10,6 +10,8 @@ from wuiw.config import DOCUMENT_TYPES, HEADERS, STATUS_ASSIGNED, STATUS_FAILED,
 from wuiw.log import civic_log
 from datetime import datetime
 
+SUPPORTED_DOCS = ["minutes", "agenda", "voting_grid"]
+
 logger = getLogger(__name__)
 
 def _transcribe_doc(pdf):
@@ -49,7 +51,11 @@ def fetch_documents(url, doc_type=None):
         doc_url = href if href.startswith("http") else f"https://www.windsorct.gov{href}"
         target_docs[detected_type] = doc_url
 
-    #TODO check target_docs.keys() against list of supported doc_types (from config.py) and count available documents
+    #Check target_docs.keys() against list of supported doc_types (from config.py) and count available documents
+    available_documents = 0
+    for key in target_docs.keys():
+        if key in SUPPORTED_DOCS:
+            available_documents += 1
     
     keys = [doc_type] if doc_type is not None else target_docs.keys()
 
@@ -70,7 +76,7 @@ def fetch_documents(url, doc_type=None):
         text = _transcribe_doc(pdf_stream)
         documents[key] = text
 
-    return (documents, STATUS_ASSIGNED, None) #TODO add available_documents integer to return data
+    return (documents, STATUS_ASSIGNED, None, available_documents)
    
 def fetch_audio():
     pass

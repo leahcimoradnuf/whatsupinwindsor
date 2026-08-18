@@ -113,6 +113,7 @@ def save_articles(articles):
         conn = get_db_connection()
         cur = conn.cursor()
         for article in articles:
+            #TODO add a query here to pull existing 'documents_summarized count for the meeting_id being updated and add 1
             cur.execute(
                 """
                 INSERT INTO articles (meeting_id, meeting_date, byline, doc_type, summary)
@@ -380,3 +381,7 @@ def approve_article(meeting_id, reviewed=True):
     finally:
         if cur: cur.close()
         if conn: conn.close()
+
+def record_document_count(available=None, summarized=None):
+    #TODO make sure assignment['available_documents'] is in assignment and add it to the query
+    pass
