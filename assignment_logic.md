@@ -15,19 +15,26 @@ FAIL|Document unreadable or not available|Remove from documents available tally
 ### State Transition: fetch_documents()
 Current State|Event|New State
 -------------|-----|---------
-None|no url available for doc_type|RETRY
-None|pdf url returns !=200|FAIL
-None|returns document text dict|SUCCESS
+None|no url available for doc_type|FOLLOW_UP
+None|pdf url returns !=200|DEAD_LEAD
+None|pdf fetched, but empty|FOLLOW_UP
+None|returns document text dict|SOURCED
+FOLLOW_UP|retry() successfully fetches|SOURCED
+FOLLOW_UP|retry() fails, under threshold|FOLLOW_UP
+FOLLOW_UP|retry() threshold met|DEAD_LEAD
 
 >*Note: the above status belongs at the individual document level. If the entire materials url returns !=200, then that is STATUS_FAILED at the assignment level*
 
 ### State Transition: write_article()/review_article()
 Current State|Event|New State
 -------------|-----|---------
-None|AI provider fails with exception|RETRY
-None|The returned article json is missing keys|RETRY
-None|The returned article has the wrong format|RETRY
-None|The article is successfully summarized|SUCCESS
+REPORTING|AI provider fails with exception|DRAFT
+REPORTING|The returned article json is missing keys|DRAFT
+REPORTING|The returned article has the wrong format|DRAFT
+REPORTING|The article is successfully summarized|DONE
+DRAFT|retry() successfully summarizes|DONE
+DRAFT|retry() fails, under threshold|DRAFT
+DRAFT|retry() threshold met|FAIL
 
 
 ## Assignment Level
