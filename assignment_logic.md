@@ -3,14 +3,14 @@
 >*Need a reliable way to keep track of status at document, assignment, and run level*
 
 ## Document Level
-These statuses are reported by document-level operations in fetch_documents() and write_article()
+These statuses are reported by document-level operations in fetch_documents() and write_article(). Each operation returns a certain set of states related to the stage of the operation: fetch or write.
 
-### State Definition
-**Status**|**Description**|**Action**
-----------|---------------|----------
-SUCCESS|Document was successfully fetched or summarized|Count towards available/summarized tally
-RETRY|Document is available but something failed during fetch/summary|Count towards available but not complete. Drives STATUS_PARTIAL
-FAIL|Document unreadable or not available|Remove from documents available tally
+### State Definition: fetch_documents()
+**Status**|**Description**
+----------|---------------
+SOURCED|Document was successfully fetched 
+FOLLOW_UP|Document is available but something failed during fetch/summary
+DEAD_LEAD|Document unreadable or not available
 
 ### State Transition: fetch_documents()
 Current State|Event|New State
@@ -25,7 +25,15 @@ FOLLOW_UP|retry() threshold met|DEAD_LEAD
 
 >*Note: the above status belongs at the individual document level. If the entire materials url returns !=200, then that is STATUS_FAILED at the assignment level*
 
-### State Transition: write_article()/review_article()
+### State Definition: write_article()
+**Status**|**Description**
+----------|---------------
+REPORTING|The assignment exists and the writer is waiting for the reporter to fetch documents
+DRAFT|The writer could not successfully produce an article, retry
+DONE|Article is successfully written
+FAIL|Article can't be written and manual intervention is needed
+
+### State Transition: write_article()
 Current State|Event|New State
 -------------|-----|---------
 REPORTING|AI provider fails with exception|DRAFT
