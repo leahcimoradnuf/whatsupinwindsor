@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import MagicMock, patch
 from wuiw.writer import review_article, write_article
-from wuiw.config import STATUS_COMPLETE, STATUS_FAILED
+from wuiw.config import STATUS_DONE, STATUS_DRAFT
 
 def test_review_valid_draft():
     valid_draft = {
@@ -20,7 +20,7 @@ def test_review_valid_draft():
     reviewed = review_article(valid_draft)
     assert isinstance(reviewed, tuple)
     assert reviewed[0] == valid_draft
-    assert reviewed[1] == STATUS_COMPLETE
+    assert reviewed[1] == STATUS_DONE
     assert reviewed[2] == None
 
 def test_review_draft_not_dict():
@@ -40,7 +40,7 @@ def test_review_draft_not_dict():
     reviewed = review_article(invalid_draft)
     assert isinstance(reviewed, tuple)
     assert reviewed[0] == None
-    assert reviewed[1] == STATUS_FAILED
+    assert reviewed[1] == STATUS_DRAFT
     assert reviewed[2] == "draft is not a dict"
 
 def test_review_draft_missing_keys():
@@ -59,7 +59,7 @@ def test_review_draft_missing_keys():
     reviewed = review_article(invalid_keys_draft)
     assert isinstance(reviewed, tuple)
     assert reviewed[0] == None
-    assert reviewed[1] == STATUS_FAILED
+    assert reviewed[1] == STATUS_DRAFT
     assert reviewed[2] == "missing keys: {'headline'}"
 
 def test_review_bad_date_format():
@@ -78,13 +78,13 @@ def test_review_bad_date_format():
     review_1 = review_article(invalid_date_draft_1)
     assert isinstance(review_1, tuple)
     assert review_1[0] == None
-    assert review_1[1] == STATUS_FAILED
+    assert review_1[1] == STATUS_DRAFT
     assert review_1[2] == "date: 01-20-2026 not in format YYYY-MM-DD"
 
     review_2 = review_article(invalid_date_draft_2)
     assert isinstance(review_2, tuple)
     assert review_2[0] == None
-    assert review_2[1] == STATUS_FAILED
+    assert review_2[1] == STATUS_DRAFT
     assert review_2[2] == "date: 2026-27-01 not in format YYYY-MM-DD"
 
 def test_review_bullets_not_list():
@@ -97,7 +97,7 @@ def test_review_bullets_not_list():
     reviewed = review_article(invalid_bullets_draft)
     assert isinstance(reviewed, tuple)
     assert reviewed[0] == None
-    assert reviewed[1] == STATUS_FAILED
+    assert reviewed[1] == STATUS_DRAFT
     assert reviewed[2] == "bullets is not a list"
 
 def test_write_returns_valid_tuple(mock_provider):
@@ -111,7 +111,7 @@ def test_write_returns_valid_tuple(mock_provider):
     
     result = write_article("town_council_1234_2026", "raw text", "minutes")
     print(result[2])
-    assert result[1] == STATUS_COMPLETE
+    assert result[1] == STATUS_DONE
     assert result[2] == None
     assert result[0]["meeting_id"] == "town_council_1234_2026"
     assert result[0]["byline"] == "gpt-4o-mini"
@@ -124,7 +124,7 @@ def test_write_returns_failed(mock_provider):
 
     result = write_article("town_council_1234_2026", "raw text", "minutes")
     assert result[0] == None
-    assert result[1] == STATUS_FAILED
+    assert result[1] == STATUS_DRAFT
     assert result[2] is not None  # some error message present
 
 def test_metadata_not_returned_on_failed(mock_provider):

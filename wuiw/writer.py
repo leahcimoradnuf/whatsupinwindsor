@@ -1,7 +1,7 @@
 # Module for writing content using AI Authors
 import logging
 from datetime import datetime
-from wuiw.config import get_provider, STATUS_FAILED, STATUS_COMPLETE
+from wuiw.config import get_provider, STATUS_DRAFT, STATUS_DONE
 from wuiw.log import ai_log
 
 logger = logging.getLogger(__name__)
@@ -22,25 +22,25 @@ def review_article(draft):
     """
     # check returned object is dictionary
     if not isinstance(draft, dict):
-        return None, STATUS_FAILED, "draft is not a dict"
+        return None, STATUS_DRAFT, "draft is not a dict"
     
     # check all keys exist
     missing = REQUIRED_KEYS - draft.keys()
     if missing:
-        return None, STATUS_FAILED, f"missing keys: {missing}"
+        return None, STATUS_DRAFT, f"missing keys: {missing}"
     
     # check date format validation
     try:
         datetime.fromisoformat(draft["meeting_date"])
     except ValueError:
         logger.warning("date value: %s is not ISO format", draft["meeting_date"])
-        return None, STATUS_FAILED, f"date: {draft['meeting_date']} not in format YYYY-MM-DD"
+        return None, STATUS_DRAFT, f"date: {draft['meeting_date']} not in format YYYY-MM-DD"
     
     # check bullets is a list etc
     if not isinstance(draft["bullets"], list):
-        return None, STATUS_FAILED, "bullets is not a list"
+        return None, STATUS_DRAFT, "bullets is not a list"
     
-    return draft, STATUS_COMPLETE, None
+    return draft, STATUS_DONE, None
 
 # Main routine of writer.py
 def write_article(meeting_id, text, doc_type):
@@ -65,12 +65,12 @@ def write_article(meeting_id, text, doc_type):
         ai_log.record(datetime.now(), provider.model, client_status, input_tokens, output_tokens)
     except Exception as e:
         ai_log.record(datetime.now(), provider.model, "FAIL", None, None)
-        return None, STATUS_FAILED, f"summarize failed: {e}"
+        return None, STATUS_DRAFT, f"summarize failed: {e}"
     
     article, status, error = review_article(draft)
     
-    if status == STATUS_FAILED:
-        return None, STATUS_FAILED, error
+    if status == STATUS_DRAFT:
+        return None, STATUS_DRAFT, error
     
     return {
         "meeting_id": meeting_id,
@@ -78,4 +78,4 @@ def write_article(meeting_id, text, doc_type):
         "byline": provider.model,
         "doc_type": doc_type,
         "summary": article
-    }, STATUS_COMPLETE, None
+    }, STATUS_DONE, None
