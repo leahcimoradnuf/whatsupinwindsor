@@ -6,7 +6,7 @@ from pypdf import PdfReader
 from bs4 import BeautifulSoup
 from logging import getLogger
 from wuiw.util import classify
-from wuiw.config import DOCUMENT_TYPES, HEADERS, STATUS_ASSIGNED, STATUS_FAILED, REQUEST_DELAY
+from wuiw.config import HEADERS, STATUS_FOLLOW_UP, STATUS_SOURCED, STATUS_ASSIGNED, STATUS_PARTIAL, REQUEST_DELAY
 from wuiw.log import civic_log
 from datetime import datetime
 
@@ -35,10 +35,10 @@ def fetch_documents(url, doc_type=None):
     time.sleep(REQUEST_DELAY)
 
     if response.status_code != 200:
+        # If it can't fetch any documents because the materials packet link doesn't work, retry
         logger.warning(f"materials url returned {response.status_code}")
-        return ({}, STATUS_FAILED, f"materials get returned {response.status_code}")
+        return (None, STATUS_PARTIAL, f"assignment url returns {response.status_code}", 0)
 
-    documents = {}
     soup = BeautifulSoup(response.text, 'html.parser')
     items = soup.find_all('div', class_='item level1')
     print(f"found {len(items)} documents to parse")
@@ -57,11 +57,18 @@ def fetch_documents(url, doc_type=None):
         if key in SUPPORTED_DOCS:
             available_documents += 1
     
-    keys = [doc_type] if doc_type is not None else target_docs.keys()
+    keys = [doc_type] if doc_type is not None else SUPPORTED_DOCS
 
+    documents = []
     for key in keys:
+        document = {}
+        document["doc_type"] = key    
         if key not in target_docs:
             logger.warning(f"doc_type {key} not in materials")
+            document["text"] = None
+            document["status"] = STATUS_FOLLOW_UP
+            document["error"] = f"doc_type {key} not in materials"
+            documents.append(document)
             continue
 
         response_pdf = requests.get(target_docs[key], headers=HEADERS)
@@ -70,11 +77,23 @@ def fetch_documents(url, doc_type=None):
 
         if response_pdf.status_code != 200:
             logger.warning(f"No pdf returned for {key}; status: {response_pdf.status_code}")
+            document["text"] = None
+            document["status"] = STATUS_FOLLOW_UP
+            document["error"] = f"No pdf returned for {key}; status: {response_pdf.status_code}"
+            documents.append(document)
             continue
 
         pdf_stream = io.BytesIO(response_pdf.content)
         text = _transcribe_doc(pdf_stream)
-        documents[key] = text
+        document["text"] = text
+        document["status"] = STATUS_SOURCED
+        document["error"] = None
+        documents.append(document)
+
+    # Review document statuses and set assignment status before returning
+    stat = [d.get("status") for d in documents if "status" in d]
+    if STATUS_FOLLOW_UP in stat:
+        return (documents, STATUS_PARTIAL, None, available_documents)    
 
     return (documents, STATUS_ASSIGNED, None, available_documents)
    

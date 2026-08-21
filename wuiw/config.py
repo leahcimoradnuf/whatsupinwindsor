@@ -36,12 +36,23 @@ MUNICIPAL_BODIES = ["Town Council", "Planning Commission", "Board of Education"]
 MEETING_TYPES = ["Regular Meeting", "Public Hearing", "Special Meeting"]
 
 # State machine
+## Assignment Level
 STATUS_PENDING = "pending"
 STATUS_ASSIGNED = "assigned"
 STATUS_COMPLETE = "complete"
 STATUS_FAILED = "failed"
 STATUS_WARNING = "warning"
 STATUS_PARTIAL = "partial"
+
+## Document Level
+STATUS_ZERO = "zero"
+STATUS_DEAD_LEAD = "dead_lead"
+STATUS_DRAFT = "draft"
+STATUS_FOLLOW_UP = "follow_up"
+STATUS_REPORTING = "reporting"
+STATUS_SOURCED = "sourced"
+STATUS_DONE = "done"
+
 
 # Journalists
 PROVIDER = os.getenv("PROVIDER") 

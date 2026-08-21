@@ -25,13 +25,30 @@ FOLLOW_UP|retry() threshold met|DEAD_LEAD
 
 >*Note: the above status belongs at the individual document level. If the entire materials url returns !=200, then that is STATUS_FAILED at the assignment level*
 
+**Data Shape Returned by fetch_documents()**
+
+In v1.0 it is currently:
+```python
+documents = {"minutes": "minutes transcription", "agenda": "agenda transcription"}
+```
+The signature needs to change to include the fetch status code:
+```python
+documents = [{"doc_type": "minutes", "text": None, "status": "FOLLOW_UP", "error": "pdf url !=200"}, 
+    {"doc_type": "agenda", "text": "agenda transcription", "status": "SOURCED", "error": None}]
+
+# some logic to derive assignment level status from doc statuses here
+
+return documents, status, error, count
+```
+Meaning fetch_documents() will return a list now instead of a dictionary, so main.py needs to handle that.
+
 ### State Definition: write_article()
-**Status**|**Description**
-----------|---------------
+Status|Description
+------|-----------
 REPORTING|The assignment exists and the writer is waiting for the reporter to fetch documents
 DRAFT|The writer could not successfully produce an article, retry
 DONE|Article is successfully written
-FAIL|Article can't be written and manual intervention is needed
+ZERO|Article can't be delivered and manual intervention is needed
 
 ### State Transition: write_article()
 Current State|Event|New State
@@ -42,8 +59,21 @@ REPORTING|The returned article has the wrong format|DRAFT
 REPORTING|The article is successfully summarized|DONE
 DRAFT|retry() successfully summarizes|DONE
 DRAFT|retry() fails, under threshold|DRAFT
-DRAFT|retry() threshold met|FAIL
+DRAFT|retry() threshold met|ZERO
 
+**Data Shape Returned by write_article()**
+
+In v1.0 it is currently:
+```python
+return {
+        "meeting_id": meeting_id,
+        "meeting_date": article.get("meeting_date"),
+        "byline": provider.model,
+        "doc_type": doc_type,
+        "summary": article
+    }, STATUS_COMPLETE, None
+```
+Which can stay the same, the only thing that needs to change is the status taxonomy.
 
 ## Assignment Level
 These statuses represent the current logic at all levels and need to be confined to the assignment level.
@@ -61,12 +91,22 @@ STATUS_FAILED|No available documents were successfully summarized|Review logs, m
 Current State|Event|New State
 -------------|-----|---------
 PENDING|assign() runs|ASSIGNED
-ASSIGNED|all docs SUCCESS|COMPLETE
-ASSIGNED|some SUCCESS, some RETRY|PARTIAL
-ASSIGNED|some SUCCESS, some RETRY, some FAIL|PARTIAL
-ASSIGNED|some SUCCESS, some FAIL|WARNING
-ASSIGNED|some RETRY, some FAIL|PARTIAL
-ASSIGNED|all docs FAIL|FAILED
+ASSIGNED|all docs SOURCED|ASSIGNED
+ASSIGNED|some SOURCED, some FOLLOW_UP|PARTIAL
+ASSIGNED|all FOLLOW_UP|PARTIAL
+ASSIGNED|all DEAD_LEAD|FAILED
+ASSIGNED|some FOLLOW_UP, some DEAD_LEAD|PARTIAL
+ASSIGNED|some SOURCED, some DEAD_LEAD|WARNING
+PARTIAL|retry succeeds, all SOURCED|ASSIGNED
+PARTIAL|retry succeeds, some SOURCED, some DEAD_LEAD|WARNING
+PARTIAL|retry fails, some SOURCED, some DEAD_LEAD|WARNING
+PARTIAL|retry fails, all DEAD_LEAD|FAILED
+ASSIGNED|all docs DONE|COMPLETE
+ASSIGNED|some DONE, some DRAFT|PARTIAL
+ASSIGNED|some DONE, some DRAFT, some ZERO|PARTIAL
+ASSIGNED|some DONE, some ZERO|WARNING
+ASSIGNED|some DRAFT, some ZERO|PARTIAL
+ASSIGNED|all docs ZERO|FAILED
 PARTIAL|retry succeeds (all now done)|COMPLETE
 PARTIAL|retry still failing, under threshold|PARTIAL
 PARTIAL|retry threshold exceeded for all documents|FAILED
@@ -74,6 +114,10 @@ PARTIAL|retry succeeds for some documents, others exceed threshold|WARNING
 COMPLETE|audit finds new href|PARTIAL
 FAILED|manual intervention|COMPLETE
 WARNING|audit finds new href|PARTIAL
+
+`editor.assign()` looks for new material to cover, STATUS_ASSIGNED.
+`editor.retry()` looks for old material to re-check, STATUS_PARTIAL.
+STATUS_COMPLETE, STATUS_FAILED, STATUS_WARNING require no automated action.
 
 ## Run Level
 
