@@ -6,7 +6,7 @@ import smtplib
 import os
 from email.mime.text import MIMEText
 from wuiw.config import get_db_connection
-from wuiw.config import STATUS_ASSIGNED
+from wuiw.config import STATUS_ASSIGNED, STATUS_REPORTING
 
 logger = logging.getLogger(__name__)
 
@@ -81,7 +81,7 @@ def assign():
         conn = get_db_connection()
         cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         cur.execute(
-            """SELECT assignments.meeting_id, meeting_type, materials, status
+            """SELECT assignments.meeting_id, meeting_type, materials, assignments.status
             FROM assignments
             LEFT JOIN articles ON assignments.meeting_id = articles.meeting_id
             WHERE assignments.status = 'pending' AND articles.meeting_id IS NULL;
@@ -101,36 +101,65 @@ def assign():
 
     return assignments
 
-def save_articles(articles):
+def retry():
+    """Scoop up assignments with STATUS_PARTIAL and retry them"""
+    pass
+
+def save_articles(articles=None, initial_save=False, id=None, doc_type=None):
     """Recieve articles from writer.write_article() and add them to the articles table
     
     Args:
         articles (lis): list of dicts containing article data ("headline", "summary", etc...)
     """
-    conn = None
-    cur = None
-    try:
-        conn = get_db_connection()
-        cur = conn.cursor()
-        for article in articles:
-            #TODO add a query here to pull existing 'documents_summarized count for the meeting_id being updated and add 1
+    if articles:
+        #TODO put a check here to make sure articles is a list of tuples, not dicts
+        conn = None
+        cur = None
+        try:
+            conn = get_db_connection()
+            cur = conn.cursor()
+            for article in articles:
+                cur.execute(
+                    """
+                    UPDATE articles SET
+                        status = %s,
+                        meeting_date = %s,
+                        byline = %s,
+                        summary = %s
+                    WHERE meeting_id = %s AND doc_type = %s
+                    """,
+                    (article[1], article[0]['meeting_date'], article[0]['byline'], json.dumps(article[0]['summary']), article[0]['meeting_id'], article[0]["doc_type"])
+                )
+            conn.commit()
+        except Exception as e:
+            conn.rollback()
+            raise
+        finally:
+            if cur: cur.close()
+            if conn: conn.close()
+
+    if initial_save:
+        conn = None
+        cur = None
+        try:
+            conn = get_db_connection()
+            cur = conn.cursor()
             cur.execute(
                 """
-                INSERT INTO articles (meeting_id, meeting_date, byline, doc_type, summary)
-                VALUES  (%s, %s, %s, %s, %s)
+                INSERT INTO articles (meeting_id, doc_type, status)
+                VALUES (%s, %s, %s)
                 ON CONFLICT (meeting_id, doc_type) DO UPDATE SET
-                    summary = EXCLUDED.summary,
-                    meeting_date = EXCLUDED.meeting_date
+                    status = EXCLUDED.status
                 """,
-                (article['meeting_id'], article['meeting_date'], article['byline'], article["doc_type"], json.dumps(article['summary']))
-            )
-        conn.commit()
-    except Exception as e:
-        conn.rollback()
-        raise
-    finally:
-        if cur: cur.close()
-        if conn: conn.close()
+                (id, doc_type, STATUS_REPORTING))
+
+        except Exception as e:
+            conn.rollback()
+            raise
+        finally:
+            if cur: cur.close()
+            if conn: conn.close()
+
 
 def open_intake(start):
     conn = None

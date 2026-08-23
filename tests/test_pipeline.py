@@ -1,10 +1,11 @@
 import pytest
 import time
+import json
 from unittest.mock import MagicMock, patch
 from wuiw.intake import get_rss
 from wuiw.editor import save_assignments, save_articles, assign, update_status
 from wuiw.writer import write_article
-from wuiw.config import STATUS_ASSIGNED
+from wuiw.config import STATUS_ASSIGNED, STATUS_DONE, STATUS_COMPLETE, STATUS_PARTIAL
 from wuiw.main import main
 
 def test_v03_pipeline(editor_db, mock_provider):
@@ -35,11 +36,10 @@ def test_v03_pipeline(editor_db, mock_provider):
     assignments = assign()
 
     with patch("wuiw.reporter.fetch_documents") as mock_fetch:
-        mock_fetch.return_value = (
-            {"minutes": "fake transcript text"},
-            STATUS_ASSIGNED,
-            None
-        )
+        mock_fetch.return_value = ([{"doc_type": "minutes", "text": "fake transcript text", "status": "sourced", "error": None}],
+                                   STATUS_ASSIGNED, 
+                                   None,
+                                   1)
         mock_provider.summarize.return_value = ({
                     "meeting_date": "2026-01-20",
                     "doc_type": "minutes",
@@ -50,18 +50,38 @@ def test_v03_pipeline(editor_db, mock_provider):
         mock_provider.model = "gpt-4o-mini"
         
         for assignment in assignments:
+            summarized = 0
             # mock reporter        
-            documents, status, error = mock_fetch(assignment["materials"])
+            documents, status, error, count = mock_fetch(assignment["materials"])
 
             # 5. mock writer
-            for doc_type, text in documents.items():
+            articles = []
+            for doc in documents:
+                doc_type = doc["doc_type"]
+                text = doc["text"]
+
+                save_articles(initial_save=True, doc_type=doc_type, id=assignment["meeting_id"])
+                
                 article, status, error = write_article(assignment["meeting_id"], text, doc_type)
                 print(f"article: {article}")
                 print(f"status: {status}")
                 print(f"error: {error}")
-                # 6. save articles
-                save_articles([article])
-                update_status(article["meeting_id"], status, error) # TODO: this updates status for whole assignment even if only 1 of multiple documents is done
+                articles.append((article, status, error))
+                if status == STATUS_DONE:
+                    summarized += 1
+
+            # 6. save articles
+            # for article in articles:
+            #     print(article)
+                # sample = (article[0]['meeting_id'], article[1], article[0]['meeting_date'], article[0]['byline'], article[0]["doc_type"], json.dumps(article[0]['summary']))
+                # print(f"SAMPLE: {sample}")
+            
+            save_articles(articles) #TODO refactor
+
+            if summarized == count and count != 0:
+                update_status(article["meeting_id"], STATUS_COMPLETE, None) # TODO: need to derive assignment level error if some docs fail
+            elif summarized < count and count != 0:
+                update_status(article["meeting_id"], STATUS_PARTIAL, "summarized < count")
     
     # 7. assert article in DB
     cur = editor_db.cursor()

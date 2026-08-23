@@ -29,7 +29,7 @@ def test_v05_signup(client):
 
 def test_v05_valid_article_id(seeded_client):
     data = SeedData()
-    response = seeded_client.get(f"/articles/{data.articles[0]['meeting_id']}")
+    response = seeded_client.get(f"/articles/{data.articles[0][0]['meeting_id']}")
     assert response.status_code == 200
 
 def test_v05_invalid_article_id(client):

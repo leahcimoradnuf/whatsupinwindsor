@@ -1,6 +1,7 @@
 import psycopg2
 import os
 import json
+from wuiw.config import STATUS_DONE
 
 # data
 
@@ -24,7 +25,7 @@ class SeedData:
             }
         ]
         # articles data
-        self.articles = [
+        self.articles = [(
             {
                 "meeting_id": "town_council_1265_2026",
                 "doc_type": "minutes",
@@ -44,7 +45,7 @@ class SeedData:
                     ],
                     "blurb": "During the meeting, Mayor Black-Burke presented a proclamation celebrating the upcoming 250th anniversary of the signing of the Declaration of Independence, urging community engagement in related events. Public comments centered on growing concerns regarding surveillance through the Flock camera system, prompting the Council to commit to further public engagement. The Council approved an amended policy for Automated License Plate Reader use and introduced a significant bond ordinance for stormwater management projects. Additionally, several appointments to local commissions and boards were approved without objection."
                     }
-            },{
+            }, STATUS_DONE, None),({
                 "meeting_id": "town_council_1263_2026",
                 "doc_type":"minutes",
                 "byline": "gpt-4o-mini",
@@ -62,7 +63,7 @@ class SeedData:
                     ],
                     "blurb": "The Windsor Town Council's meeting on January 20 saw the approval of a $400,000 bond for stormwater management, alongside unanimous endorsement of the updated 2025 Plan of Conservation and Development. Public commentary reflected concerns regarding police staffing and management practices. The council recognized students from local schools for their achievements in fire safety awareness with a poster contest. A settlement regarding the Rivers Bend lawsuit was also discussed and ratified in Executive Session. Additionally, upcoming community events, including a public meeting on automated license plate readers, were highlighted."
                 }
-            }
+            },STATUS_DONE, None)
         ]
 
         self.errors = [
@@ -140,6 +141,7 @@ def create_tables(conn):
         """CREATE TABLE IF NOT EXISTS articles (
         id SERIAL PRIMARY KEY,
         meeting_id TEXT UNIQUE NOT NULL,
+        status TEXT,
         meeting_date DATE,
         byline TEXT,
         doc_type TEXT,
@@ -196,13 +198,13 @@ def seed_db(conn):
     for article in data.articles:
         cur.execute(
             """
-            INSERT INTO articles (meeting_id, meeting_date, byline, doc_type, summary)
-            VALUES  (%s, %s, %s, %s, %s)
+            INSERT INTO articles (meeting_id, status, meeting_date, byline, doc_type, summary)
+            VALUES  (%s, %s, %s, %s, %s, %s)
             ON CONFLICT (meeting_id, doc_type) DO UPDATE SET
                 summary = EXCLUDED.summary,
                 meeting_date = EXCLUDED.meeting_date
             """,
-            (article['meeting_id'], article['meeting_date'], article['byline'], article["doc_type"], json.dumps(article['summary']))
+            (article[0]['meeting_id'], article[1], article[0]['meeting_date'], article[0]['byline'], article[0]["doc_type"], json.dumps(article[0]['summary']))
         )
     for error in data.errors:
         cur.execute(
