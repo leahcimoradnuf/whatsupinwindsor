@@ -140,7 +140,7 @@ def create_tables(conn):
     cur.execute(
         """CREATE TABLE IF NOT EXISTS articles (
         id SERIAL PRIMARY KEY,
-        meeting_id TEXT UNIQUE NOT NULL,
+        meeting_id TEXT NOT NULL,
         status TEXT,
         meeting_date DATE,
         byline TEXT,

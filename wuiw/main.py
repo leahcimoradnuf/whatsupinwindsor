@@ -65,7 +65,7 @@ def main():
                 failed = True
                 continue
             logger.info(f"Fetched {len(documents)} documents for {assignment['meeting_id']}") 
-            record_document_count(available=count) #TODO needs unit test
+            record_document_count(assignment["meeting_id"], available=count) #TODO needs unit test
 
             # Summarize documents. 
             articles = []
@@ -90,7 +90,7 @@ def main():
             # This gets moved into save_articles() -> logger.info(f"Article saved: {article['meeting_id']} {doc_type}")
 
             # Document count vs. available status logic
-            record_document_count(summarized=summarized)
+            record_document_count(assignment["meeting_id"], summarized=summarized)
 
             #TODO this logic is fine for now but will need to be updated to deploy retry() and handle STATUS_WARNING and STATUS FAILED
             if summarized >= 0 and summarized < count:

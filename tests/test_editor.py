@@ -3,7 +3,7 @@ import pytest
 import psycopg2.extras
 from datetime import datetime
 from unittest.mock import MagicMock, patch
-from wuiw.editor import update_status, save_assignments, open_intake, close_intake, save_ai_log, save_civic_log, send_alert, update_article, save_articles
+from wuiw.editor import update_status, save_assignments, open_intake, close_intake, save_ai_log, save_civic_log, send_alert, update_article, save_articles, record_document_count
 from wuiw.config import STATUS_PENDING, STATUS_ASSIGNED, STATUS_COMPLETE, STATUS_FAILED, PROVIDER
 from tests.seed import SeedData
 from wuiw.log import ai_log, civic_log
@@ -227,3 +227,17 @@ def test_v11_initial_article_save(editor_db):
 def test_v11_save_article():
     """Save a new article after initial save has created row"""
     pass
+
+def test_v11_record_available_docs(editor_db):
+    record_document_count("town_council_1265_2026", available=3)
+    cur = editor_db.cursor()
+    cur.execute("""SELECT documents_available FROM assignments
+                WHERE meeting_id = %s""", ("town_council_1265_2026",)
+                )
+    assert cur.fetchone()[0] == 3
+
+    record_document_count("town_council_1265_2026", summarized=2)
+    cur.execute("""SELECT documents_summarized FROM assignments
+                WHERE meeting_id = %s""", ("town_council_1265_2026",)
+                )
+    assert cur.fetchone()[0] == 2

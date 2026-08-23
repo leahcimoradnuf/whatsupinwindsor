@@ -411,6 +411,37 @@ def approve_article(meeting_id, reviewed=True):
         if cur: cur.close()
         if conn: conn.close()
 
-def record_document_count(available=None, summarized=None):
+def record_document_count(meeting_id, available=None, summarized=None):
     #TODO make sure assignment['available_documents'] is in assignment and add it to the query
-    pass
+    conn = None
+    cur = None
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        if available:
+            cur.execute(
+                """
+                UPDATE assignments SET documents_available = %s
+                WHERE meeting_id = %s
+                """,
+                (available, meeting_id)
+            )
+
+        if summarized:
+            cur.execute(
+                """
+                UPDATE assignments SET documents_summarized = %s
+                WHERE meeting_id = %s
+                """,
+                (summarized, meeting_id)
+            )
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        logger.warning(f"{e}")
+        raise
+    finally:
+        if cur: cur.close()
+        if conn: conn.close()
+        
+        
