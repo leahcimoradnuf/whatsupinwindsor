@@ -56,25 +56,21 @@ def main():
 
         # Send assignments to reporter to transcribe docs. 
         for assignment in assignments:
-            summarized = 0
+            summarized_docs = 0 # initialize counter
             failed = False
-            documents, status, error, count = fetch_documents(assignment["materials"])
+            documents, status, error, available_docs = fetch_documents(assignment["materials"])
             if not documents:
                 update_status(assignment["meeting_id"], status, error)
                 logger.warning(f"fetch_documents failed for {assignment['meeting_id']}: {error}")
                 failed = True
                 continue
             logger.info(f"Fetched {len(documents)} documents for {assignment['meeting_id']}") 
-            record_document_count(assignment["meeting_id"], available=count) #TODO needs unit test
 
             # Summarize documents. 
             articles = []
             for doc in documents:
                 doc_type = doc["doc_type"]
                 text = doc["text"]
-
-                # Initial document save (set all status to REPORTING)
-                save_articles(initial_save=True, id=assignment["meeting_id"], doc_type=doc_type)
 
                 article, status, error = write_article(assignment["meeting_id"], text, doc_type)
 
@@ -84,21 +80,13 @@ def main():
                 articles.append((article, status, error))
 
                 if status == STATUS_DONE:
-                    summarized += 1
+                    summarized_docs += 1
 
-            save_articles(articles=articles) #TODO save_articles() needs a refactor to handle new signature/schema
-            # This gets moved into save_articles() -> logger.info(f"Article saved: {article['meeting_id']} {doc_type}")
+            # persist articles to db
+            save_articles(assignment["meeting_id"], articles) 
 
-            # Document count vs. available status logic
-            record_document_count(assignment["meeting_id"], summarized=summarized)
-
-            #TODO this logic is fine for now but will need to be updated to deploy retry() and handle STATUS_WARNING and STATUS FAILED
-            if summarized >= 0 and summarized < count:
-                status = STATUS_PARTIAL
-            elif summarized == count:
-                status = STATUS_COMPLETE
-
-            update_status(article["meeting_id"], status, error)
+            # persist count vs. available status
+            record_document_count(assignment["meeting_id"], available_docs, summarized_docs)
             
             # count failure
             if failed:

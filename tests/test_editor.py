@@ -3,8 +3,8 @@ import pytest
 import psycopg2.extras
 from datetime import datetime
 from unittest.mock import MagicMock, patch
-from wuiw.editor import update_status, save_assignments, open_intake, close_intake, save_ai_log, save_civic_log, send_alert, update_article, save_articles, record_document_count
-from wuiw.config import STATUS_PENDING, STATUS_ASSIGNED, STATUS_COMPLETE, STATUS_FAILED, PROVIDER
+from wuiw.editor import assign, update_status, save_assignments, open_intake, close_intake, save_ai_log, save_civic_log, send_alert, update_article, save_articles, record_document_count
+from wuiw.config import STATUS_PENDING, STATUS_ASSIGNED, STATUS_COMPLETE, STATUS_FAILED, PROVIDER, STATUS_REPORTING, STATUS_DRAFT, STATUS_DONE
 from tests.seed import SeedData
 from wuiw.log import ai_log, civic_log
 
@@ -214,6 +214,7 @@ def test_v07_update_article_pipe(admin_client, seeded_db, edit_seeded):
     status = cur.fetchone()
     assert status["resolved"] == True
 
+@pytest.mark.skip(reason="never meant to deploy")
 def test_v11_initial_article_save(editor_db):
     """Test that save_articles() with initial_save=True flag inserts a row into the articles table"""
     save_articles(initial_save=True, id="town_council_1234_2026", doc_type="agenda")
@@ -222,22 +223,54 @@ def test_v11_initial_article_save(editor_db):
     assert cur.fetchone()[0] == "agenda"
 
     cur.execute("""SELECT status FROM articles WHERE meeting_id = %s""", ("town_council_1234_2026",))
-    assert cur.fetchone()[0] == "reporting"
+    assert cur.fetchone()[0] == STATUS_REPORTING
 
-def test_v11_save_article():
+def test_v11_save_articles(editor_db):
     """Save a new article after initial save has created row"""
-    pass
+    data = SeedData()
+    save_assignments(data.assignments)
+    assign()
+    articles = data.articles + [({"meeting_id": "town_council_1265_2026", "doc_type": "agenda"}, STATUS_DRAFT, "error")]
+    save_articles(articles)
 
-def test_v11_record_available_docs(editor_db):
-    record_document_count("town_council_1265_2026", available=3)
     cur = editor_db.cursor()
-    cur.execute("""SELECT documents_available FROM assignments
-                WHERE meeting_id = %s""", ("town_council_1265_2026",)
-                )
-    assert cur.fetchone()[0] == 3
+    cur.execute("""SELECT status FROM articles WHERE meeting_id = %s AND doc_type = %s""", ("town_council_1265_2026", "agenda"))
+    result = cur.fetchone()
+    assert result[0] == STATUS_DRAFT
 
-    record_document_count("town_council_1265_2026", summarized=2)
-    cur.execute("""SELECT documents_summarized FROM assignments
+    cur.execute("""SELECT status FROM articles WHERE meeting_id = %s AND doc_type = %s""", ("town_council_1265_2026", "minutes"))
+    result = cur.fetchone()
+    assert result[0] == STATUS_DONE
+
+    cur.execute("""SELECT status FROM articles WHERE meeting_id = %s AND doc_type = %s""", ("town_council_1265_2026", "voting_grid"))
+    result = cur.fetchone()
+    assert result[0] == STATUS_REPORTING
+
+def test_v11_record_document_status(editor_db):
+    record_document_count("town_council_1265_2026", 0, 0)
+    cur = editor_db.cursor()
+    cur.execute("""SELECT documents_available, documents_summarized, status FROM assignments
                 WHERE meeting_id = %s""", ("town_council_1265_2026",)
                 )
-    assert cur.fetchone()[0] == 2
+    result = cur.fetchone()
+    assert result[0] == 0
+    assert result[1] == 0
+    assert result[2] == "partial"
+
+    record_document_count("town_council_1265_2026", 3, 2)
+    cur.execute("""SELECT documents_available, documents_summarized, status FROM assignments
+                WHERE meeting_id = %s""", ("town_council_1265_2026",)
+                )
+    result = cur.fetchone()
+    assert result[0] == 3
+    assert result[1] == 2
+    assert result[2] == "partial"
+
+    record_document_count("town_council_1265_2026", 3, 3)
+    cur.execute("""SELECT documents_available, documents_summarized, status FROM assignments
+                WHERE meeting_id = %s""", ("town_council_1265_2026",)
+                )
+    result = cur.fetchone()
+    assert result[0] == 3
+    assert result[1] == 3
+    assert result[2] == "complete"

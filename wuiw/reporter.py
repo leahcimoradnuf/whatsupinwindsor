@@ -6,11 +6,9 @@ from pypdf import PdfReader
 from bs4 import BeautifulSoup
 from logging import getLogger
 from wuiw.util import classify
-from wuiw.config import HEADERS, STATUS_FOLLOW_UP, STATUS_SOURCED, STATUS_ASSIGNED, STATUS_PARTIAL, REQUEST_DELAY
+from wuiw.config import HEADERS, STATUS_FOLLOW_UP, STATUS_SOURCED, STATUS_ASSIGNED, STATUS_PARTIAL, REQUEST_DELAY, SUPPORTED_DOCS
 from wuiw.log import civic_log
 from datetime import datetime
-
-SUPPORTED_DOCS = ["minutes", "agenda", "voting_grid"]
 
 logger = getLogger(__name__)
 

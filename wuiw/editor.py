@@ -6,7 +6,7 @@ import smtplib
 import os
 from email.mime.text import MIMEText
 from wuiw.config import get_db_connection
-from wuiw.config import STATUS_ASSIGNED, STATUS_REPORTING
+from wuiw.config import STATUS_ASSIGNED, STATUS_REPORTING, STATUS_PARTIAL, STATUS_COMPLETE, SUPPORTED_DOCS
 
 logger = logging.getLogger(__name__)
 
@@ -81,10 +81,9 @@ def assign():
         conn = get_db_connection()
         cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         cur.execute(
-            """SELECT assignments.meeting_id, meeting_type, materials, assignments.status
+            """SELECT meeting_id, meeting_type, materials, status
             FROM assignments
-            LEFT JOIN articles ON assignments.meeting_id = articles.meeting_id
-            WHERE assignments.status = 'pending' AND articles.meeting_id IS NULL;
+            WHERE status = 'pending'
             """
         )
         assignments = cur.fetchall()
@@ -99,13 +98,36 @@ def assign():
     for assignment in assignments:
         update_status(assignment['meeting_id'], STATUS_ASSIGNED)
 
+        # Populate articles table
+        conn = None
+        cur = None
+        try:
+            conn = get_db_connection()
+            cur = conn.cursor()
+            for doc_type in SUPPORTED_DOCS:
+                cur.execute(
+                    """
+                    INSERT INTO articles (meeting_id, doc_type, status)
+                    VALUES (%s, %s, %s)
+                    ON CONFLICT (meeting_id, doc_type) DO UPDATE SET
+                        status = EXCLUDED.status
+                    """,
+                    (assignment['meeting_id'], doc_type, STATUS_REPORTING))
+    
+        except Exception as e:
+            conn.rollback()
+            raise
+        finally:
+            if cur: cur.close()
+            if conn: conn.close()
+
     return assignments
 
 def retry():
     """Scoop up assignments with STATUS_PARTIAL and retry them"""
     pass
 
-def save_articles(articles=None, initial_save=False, id=None, doc_type=None):
+def save_articles(articles):
     """Recieve articles from writer.write_article() and add them to the articles table
     
     Args:
@@ -119,17 +141,28 @@ def save_articles(articles=None, initial_save=False, id=None, doc_type=None):
             conn = get_db_connection()
             cur = conn.cursor()
             for article in articles:
-                cur.execute(
-                    """
-                    UPDATE articles SET
-                        status = %s,
-                        meeting_date = %s,
-                        byline = %s,
-                        summary = %s
-                    WHERE meeting_id = %s AND doc_type = %s
-                    """,
-                    (article[1], article[0]['meeting_date'], article[0]['byline'], json.dumps(article[0]['summary']), article[0]['meeting_id'], article[0]["doc_type"])
-                )
+                try:
+                    cur.execute(
+                        """
+                        UPDATE articles SET
+                            status = %s,
+                            meeting_date = %s,
+                            byline = %s,
+                            summary = %s
+                        WHERE meeting_id = %s AND doc_type = %s
+                        """,
+                        (article[1], article[0]['meeting_date'], article[0]['byline'], json.dumps(article[0]['summary']), article[0]["meeting_id"], article[0]["doc_type"])
+                    )
+                except KeyError: # writer returns a blank article
+                    cur.execute(
+                        """
+                        UPDATE articles SET status = %s
+                        WHERE meeting_id = %s AND doc_type = %s
+                        """,
+                        (article[1], article[0]["meeting_id"], article[0]["doc_type"] )
+                    )
+                logger.info(f"Article saved: {article[0]['meeting_id']} {article[0]['doc_type']}")
+
             conn.commit()
         except Exception as e:
             conn.rollback()
@@ -137,28 +170,7 @@ def save_articles(articles=None, initial_save=False, id=None, doc_type=None):
         finally:
             if cur: cur.close()
             if conn: conn.close()
-
-    if initial_save:
-        conn = None
-        cur = None
-        try:
-            conn = get_db_connection()
-            cur = conn.cursor()
-            cur.execute(
-                """
-                INSERT INTO articles (meeting_id, doc_type, status)
-                VALUES (%s, %s, %s)
-                ON CONFLICT (meeting_id, doc_type) DO UPDATE SET
-                    status = EXCLUDED.status
-                """,
-                (id, doc_type, STATUS_REPORTING))
-
-        except Exception as e:
-            conn.rollback()
-            raise
-        finally:
-            if cur: cur.close()
-            if conn: conn.close()
+    
 
 
 def open_intake(start):
@@ -411,30 +423,25 @@ def approve_article(meeting_id, reviewed=True):
         if cur: cur.close()
         if conn: conn.close()
 
-def record_document_count(meeting_id, available=None, summarized=None):
+def record_document_count(meeting_id, available, summarized):
     #TODO make sure assignment['available_documents'] is in assignment and add it to the query
     conn = None
     cur = None
     try:
         conn = get_db_connection()
         cur = conn.cursor()
-        if available:
-            cur.execute(
-                """
-                UPDATE assignments SET documents_available = %s
-                WHERE meeting_id = %s
-                """,
-                (available, meeting_id)
-            )
+        if summarized >= 0 and summarized < available:
+            status = STATUS_PARTIAL
+        elif summarized == available and available == 0:
+            status = STATUS_PARTIAL
+        elif summarized == available:
+            status = STATUS_COMPLETE
 
-        if summarized:
-            cur.execute(
-                """
-                UPDATE assignments SET documents_summarized = %s
-                WHERE meeting_id = %s
-                """,
-                (summarized, meeting_id)
-            )
+        cur.execute(
+            """UPDATE assignments SET documents_available = %s, documents_summarized = %s, status = %s WHERE meeting_id = %s""",
+            (available, summarized, status, meeting_id)
+        )
+        
         conn.commit()
     except Exception as e:
         conn.rollback()

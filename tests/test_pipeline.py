@@ -3,9 +3,9 @@ import time
 import json
 from unittest.mock import MagicMock, patch
 from wuiw.intake import get_rss
-from wuiw.editor import save_assignments, save_articles, assign, update_status
+from wuiw.editor import save_assignments, save_articles, assign, update_status, record_document_count
 from wuiw.writer import write_article
-from wuiw.config import STATUS_ASSIGNED, STATUS_DONE, STATUS_COMPLETE, STATUS_PARTIAL
+from wuiw.config import STATUS_ASSIGNED, STATUS_DONE, STATUS_COMPLETE, STATUS_PARTIAL,STATUS_REPORTING, SUPPORTED_DOCS
 from wuiw.main import main
 
 def test_v03_pipeline(editor_db, mock_provider):
@@ -35,6 +35,23 @@ def test_v03_pipeline(editor_db, mock_provider):
     # 3. get work queue
     assignments = assign()
 
+    # assert work queue is populated
+    cur = editor_db.cursor()
+    cur.execute("""SELECT status FROM assignments WHERE meeting_id = %s""", ("town_council_1219_2026",))
+    results = cur.fetchall()
+    for result in results:
+        assert result[0] == STATUS_ASSIGNED
+
+    cur.execute("""SELECT doc_type FROM articles WHERE meeting_id = %s""", ("town_council_1219_2026",))
+    results = cur.fetchall()
+    for result in results:
+        assert result[0] in SUPPORTED_DOCS
+
+    cur.execute("""SELECT status FROM articles WHERE meeting_id = %s""", ("town_council_1219_2026",))
+    results = cur.fetchall()
+    for result in results:
+        assert result[0] == STATUS_REPORTING
+
     with patch("wuiw.reporter.fetch_documents") as mock_fetch:
         mock_fetch.return_value = ([{"doc_type": "minutes", "text": "fake transcript text", "status": "sourced", "error": None}],
                                    STATUS_ASSIGNED, 
@@ -59,8 +76,6 @@ def test_v03_pipeline(editor_db, mock_provider):
             for doc in documents:
                 doc_type = doc["doc_type"]
                 text = doc["text"]
-
-                save_articles(initial_save=True, doc_type=doc_type, id=assignment["meeting_id"])
                 
                 article, status, error = write_article(assignment["meeting_id"], text, doc_type)
                 print(f"article: {article}")
@@ -78,18 +93,15 @@ def test_v03_pipeline(editor_db, mock_provider):
             
             save_articles(articles) #TODO refactor
 
-            if summarized == count and count != 0:
-                update_status(article["meeting_id"], STATUS_COMPLETE, None) # TODO: need to derive assignment level error if some docs fail
-            elif summarized < count and count != 0:
-                update_status(article["meeting_id"], STATUS_PARTIAL, "summarized < count")
+            record_document_count(assignment["meeting_id"], count, summarized)
     
     # 7. assert article in DB
-    cur = editor_db.cursor()
 
     # both articles written to articles table
     cur.execute("SELECT meeting_id FROM articles")
     results = cur.fetchall()
-    assert len(results) == 4 # two new plus seeded assignment
+    print(len(results))
+    assert len(results) == 12 # two new plus seeded assignment
 
     # specific meeting_ids present
     cur.execute("SELECT meeting_id FROM articles WHERE meeting_id = %s", ("town_council_1419_2026",))
@@ -158,11 +170,11 @@ def test_v06_pipeline(editor_db, mock_feedparser, mock_request, mock_anthropic_c
     assert ai_result[1][0] == 1 # ai summary request for second article in run 1
     # no summaries in run 2 because get_rss() finds no new leads
 
-    cur.execute("SELECT last_run_id FROM assignments")
+    cur.execute("SELECT last_run_id FROM assignments ORDER BY last_run_id ASC")
     assignment_results = cur.fetchall()
-    # print(f"{assignment_results = }")
-    # expected result: [(None,), (None,), (1,), (1,)]
-    assert assignment_results[0][0] == None # manually seeded entry not tied to scraper run
-    assert assignment_results[1][0] == None # manually seeded entry not tied to scraper run
-    assert assignment_results[2][0] == 1 # assignment found in run one and unchanged by run 2
-    assert assignment_results[3][0] == 1 # assignment found in run one and unchanged by run 2
+    print(f"{assignment_results = }")
+    # expected result: [(1,), (1,), (None,), (None,)]
+    assert assignment_results[0][0] == 1 # manually seeded entry not tied to scraper run
+    assert assignment_results[1][0] == 1 # manually seeded entry not tied to scraper run
+    assert assignment_results[2][0] == None # assignment found in run one and unchanged by run 2
+    assert assignment_results[3][0] == None # assignment found in run one and unchanged by run 2

@@ -34,6 +34,7 @@ CLASSIFICATIONS = {
 DOCUMENT_TYPES = ["Agenda", "Minutes", "Votes"]
 MUNICIPAL_BODIES = ["Town Council", "Planning Commission", "Board of Education"] #TODO expand this to cover all bodies of govt
 MEETING_TYPES = ["Regular Meeting", "Public Hearing", "Special Meeting"]
+SUPPORTED_DOCS = ["minutes", "agenda", "voting_grid"]
 
 # State machine
 ## Assignment Level

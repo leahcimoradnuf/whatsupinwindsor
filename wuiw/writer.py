@@ -70,7 +70,8 @@ def write_article(meeting_id, text, doc_type):
     article, status, error = review_article(draft)
     
     if status == STATUS_DRAFT:
-        return None, STATUS_DRAFT, error
+        # return a blank article, not None
+        return {"meeting_id": meeting_id, "doc_type": doc_type}, STATUS_DRAFT, error
     
     return {
         "meeting_id": meeting_id,
