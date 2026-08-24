@@ -1,7 +1,7 @@
 import psycopg2
 import os
 import json
-from wuiw.config import STATUS_DONE
+from wuiw.config import STATUS_DONE, STATUS_PENDING
 
 # data
 
@@ -192,7 +192,7 @@ def seed_db(conn):
             """INSERT INTO assignments (meeting_id, meeting_type, body, published_date, materials, status)
             VALUES (%s, %s, %s, %s, %s, %s)
             ON CONFLICT (meeting_id) DO NOTHING""",
-            (assignment["meeting_id"], assignment["meeting_type"], assignment["body"], assignment["published_date"], assignment["materials"], "pending")
+            (assignment["meeting_id"], assignment["meeting_type"], assignment["body"], assignment["published_date"], assignment["materials"], STATUS_PENDING)
         
         )
     for article in data.articles:

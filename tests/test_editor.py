@@ -274,3 +274,35 @@ def test_v11_record_document_status(editor_db):
     assert result[0] == 3
     assert result[1] == 3
     assert result[2] == "complete"
+
+def test_v11_assign_doesnt_overwrite_existing(editor_db):
+    """Check that an existing assignment is not overwritten when the same meeting_id is on the list
+    i.e. an article with STATUS_DONE isn't overwritten to STATUS_REPORTING
+    """
+    data = SeedData()
+    save_assignments(data.assignments)
+
+    cur = editor_db.cursor()
+    cur.execute("""SELECT status FROM assignments WHERE meeting_id = %s""", (data.assignments[0]["meeting_id"],))
+    assert cur.fetchone()[0] == STATUS_PENDING
+
+    # articles are already in the seeded db, so status should already be pending
+    cur.execute("SELECT status FROM articles WHERE meeting_id = %s AND doc_type = %s", (data.assignments[0]["meeting_id"], "minutes"))
+    assert cur.fetchone()[0] == STATUS_DONE
+
+    # Now run assign() the first time, note that there really is no situation where an assignment with STATUS_PENDING would already have articles to overwrite. It would only ever be STATUS_PARTIAL in that case
+    assign()
+
+    # confirm the assignment status changes to assigned, but the article status remains done
+    cur.execute("""SELECT status FROM assignments WHERE meeting_id = %s""", (data.assignments[0]["meeting_id"],))
+    assert cur.fetchone()[0] == STATUS_ASSIGNED
+
+    cur.execute("SELECT status FROM articles WHERE meeting_id = %s AND doc_type = %s", (data.assignments[0]["meeting_id"], "minutes"))
+    assert cur.fetchone()[0] == STATUS_DONE
+
+    # Now though, in this odd test case, expect a row for agenda and voting grid to be generated
+    cur.execute("SELECT status FROM articles WHERE meeting_id = %s AND doc_type = %s", (data.assignments[0]["meeting_id"], "agenda"))
+    assert cur.fetchone()[0] == STATUS_REPORTING
+
+    cur.execute("SELECT status FROM articles WHERE meeting_id = %s AND doc_type = %s", (data.assignments[0]["meeting_id"], "voting_grid"))
+    assert cur.fetchone()[0] == STATUS_REPORTING

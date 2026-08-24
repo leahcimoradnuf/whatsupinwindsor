@@ -109,8 +109,7 @@ def assign():
                     """
                     INSERT INTO articles (meeting_id, doc_type, status)
                     VALUES (%s, %s, %s)
-                    ON CONFLICT (meeting_id, doc_type) DO UPDATE SET
-                        status = EXCLUDED.status
+                    ON CONFLICT (meeting_id, doc_type) DO NOTHING
                     """,
                     (assignment['meeting_id'], doc_type, STATUS_REPORTING))
     
