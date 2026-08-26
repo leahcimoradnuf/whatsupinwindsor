@@ -164,7 +164,15 @@ def test_v06_pipeline(editor_db, mock_feedparser, mock_request, mock_anthropic_c
     assert civic_result[6][0] == 1 # first pdf request
     assert civic_result[7][0] == 1 # second pdf request
     assert civic_result[8][0] == 1 # third pdf request
-    assert civic_result[9][0] == 2 # rss ping on run 2 finds no new rss entries, no further requests expected
+    assert civic_result[9][0] == 1 # third materials.html request
+    assert civic_result[10][0] == 1 # first pdf request
+    assert civic_result[11][0] == 1 # second pdf request
+    assert civic_result[12][0] == 1 # third pdf request
+    assert civic_result[13][0] == 1 # fourth materials.html request
+    assert civic_result[14][0] == 1 # first pdf request
+    assert civic_result[15][0] == 1 # second pdf request
+    assert civic_result[16][0] == 1 # third pdf request
+    assert civic_result[17][0] == 2 # rss ping on run 2 finds no new rss entries, no further requests expected
 
     cur.execute("SELECT run_id FROM ai_requests")
     ai_result = cur.fetchall()
