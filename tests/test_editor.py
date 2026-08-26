@@ -230,7 +230,7 @@ def test_v11_save_articles(editor_db):
     data = SeedData()
     save_assignments(data.assignments)
     assign()
-    articles = data.articles + [({"meeting_id": "town_council_1265_2026", "doc_type": "agenda"}, STATUS_DRAFT, "error")]
+    articles = data.articles + [({"meeting_id": "town_council_1265_2026", "doc_type": "agenda"}, STATUS_DRAFT, "error", "http://link/")]
     save_articles(articles)
 
     cur = editor_db.cursor()
@@ -306,3 +306,13 @@ def test_v11_assign_doesnt_overwrite_existing(editor_db):
 
     cur.execute("SELECT status FROM articles WHERE meeting_id = %s AND doc_type = %s", (data.assignments[0]["meeting_id"], "voting_grid"))
     assert cur.fetchone()[0] == STATUS_REPORTING
+
+def test_v11_save_articles_includes_doc_url(editor_db):
+    """show that save_articles handles a document url"""
+    articles = [({"meeting_id": "town_council_1265_2026", "doc_type": "minutes"}, STATUS_DRAFT, "error", "http://link/to/source/document")]
+    save_articles(articles)
+
+    cur = editor_db.cursor()
+    cur.execute("SELECT doc_url FROM articles WHERE meeting_id = %s AND doc_type = %s", ("town_council_1265_2026", "minutes"))
+    # print(f"Result: {cur.fetchall()}")
+    assert cur.fetchone()[0] == "http://link/to/source/document"

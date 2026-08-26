@@ -77,13 +77,13 @@ def main():
                 if not article:
                     logger.warning(f"write_article failed for {assignment['meeting_id']} {doc_type}: {error}")
 
-                articles.append((article, status, error))
+                articles.append((article, status, error, doc["doc_url"]))
 
                 if status == STATUS_DONE:
                     summarized_docs += 1
 
             # persist articles to db
-            save_articles(assignment["meeting_id"], articles) 
+            save_articles(articles) 
 
             # persist count vs. available status
             record_document_count(assignment["meeting_id"], available_docs, summarized_docs)

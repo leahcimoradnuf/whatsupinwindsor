@@ -53,7 +53,7 @@ def test_v03_pipeline(editor_db, mock_provider):
         assert result[0] == STATUS_REPORTING
 
     with patch("wuiw.reporter.fetch_documents") as mock_fetch:
-        mock_fetch.return_value = ([{"doc_type": "minutes", "text": "fake transcript text", "status": "sourced", "error": None}],
+        mock_fetch.return_value = ([{"doc_type": "minutes", "text": "fake transcript text", "status": "sourced", "error": None, "doc_url": "http://link/to/doc"}],
                                    STATUS_ASSIGNED, 
                                    None,
                                    1)
@@ -81,7 +81,7 @@ def test_v03_pipeline(editor_db, mock_provider):
                 print(f"article: {article}")
                 print(f"status: {status}")
                 print(f"error: {error}")
-                articles.append((article, status, error))
+                articles.append((article, status, error, doc['doc_url']))
                 if status == STATUS_DONE:
                     summarized += 1
 
@@ -153,14 +153,18 @@ def test_v06_pipeline(editor_db, mock_feedparser, mock_request, mock_anthropic_c
 
     cur.execute("SELECT run_id FROM civic_requests")
     civic_result = cur.fetchall()
-    # print(f"{civic_result = }")
+    print(f"{civic_result = }")
     # expected result: [(1,), (1,), (1,), (1,), (1,), (2,)]
     assert civic_result[0][0] == 1 # first rss ping finds two assignment packets
     assert civic_result[1][0] == 1 # first materials.html request
     assert civic_result[2][0] == 1 # first pdf request
-    assert civic_result[3][0] == 1 # second materials.html request
-    assert civic_result[4][0] == 1 # second pdf request
-    assert civic_result[5][0] == 2 # rss ping on run 2 finds no new rss entries, no further requests expected
+    assert civic_result[3][0] == 1 # second pdf request
+    assert civic_result[4][0] == 1 # third pdf request
+    assert civic_result[5][0] == 1 # second materials.html request
+    assert civic_result[6][0] == 1 # first pdf request
+    assert civic_result[7][0] == 1 # second pdf request
+    assert civic_result[8][0] == 1 # third pdf request
+    assert civic_result[9][0] == 2 # rss ping on run 2 finds no new rss entries, no further requests expected
 
     cur.execute("SELECT run_id FROM ai_requests")
     ai_result = cur.fetchall()

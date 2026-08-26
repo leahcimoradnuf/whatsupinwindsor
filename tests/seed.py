@@ -45,7 +45,7 @@ class SeedData:
                     ],
                     "blurb": "During the meeting, Mayor Black-Burke presented a proclamation celebrating the upcoming 250th anniversary of the signing of the Declaration of Independence, urging community engagement in related events. Public comments centered on growing concerns regarding surveillance through the Flock camera system, prompting the Council to commit to further public engagement. The Council approved an amended policy for Automated License Plate Reader use and introduced a significant bond ordinance for stormwater management projects. Additionally, several appointments to local commissions and boards were approved without objection."
                     }
-            }, STATUS_DONE, None),({
+            }, STATUS_DONE, None, "http://link/"),({
                 "meeting_id": "town_council_1263_2026",
                 "doc_type":"minutes",
                 "byline": "gpt-4o-mini",
@@ -63,7 +63,7 @@ class SeedData:
                     ],
                     "blurb": "The Windsor Town Council's meeting on January 20 saw the approval of a $400,000 bond for stormwater management, alongside unanimous endorsement of the updated 2025 Plan of Conservation and Development. Public commentary reflected concerns regarding police staffing and management practices. The council recognized students from local schools for their achievements in fire safety awareness with a poster contest. A settlement regarding the Rivers Bend lawsuit was also discussed and ratified in Executive Session. Additionally, upcoming community events, including a public meeting on automated license plate readers, were highlighted."
                 }
-            },STATUS_DONE, None)
+            },STATUS_DONE, None, "http://link/")
         ]
 
         self.errors = [
@@ -142,6 +142,7 @@ def create_tables(conn):
         id SERIAL PRIMARY KEY,
         meeting_id TEXT NOT NULL,
         status TEXT,
+        doc_url TEXT,
         meeting_date DATE,
         byline TEXT,
         doc_type TEXT,

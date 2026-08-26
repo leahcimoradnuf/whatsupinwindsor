@@ -147,19 +147,23 @@ def save_articles(articles):
                             status = %s,
                             meeting_date = %s,
                             byline = %s,
-                            summary = %s
+                            summary = %s,
+                            doc_url = %s
                         WHERE meeting_id = %s AND doc_type = %s
                         """,
-                        (article[1], article[0]['meeting_date'], article[0]['byline'], json.dumps(article[0]['summary']), article[0]["meeting_id"], article[0]["doc_type"])
+                        (article[1], article[0]['meeting_date'], article[0]['byline'], json.dumps(article[0]['summary']), article[3], article[0]["meeting_id"], article[0]["doc_type"])
                     )
                 except KeyError: # writer returns a blank article
                     cur.execute(
                         """
-                        UPDATE articles SET status = %s
+                        UPDATE articles SET
+                            status = %s,
+                            doc_url = %s
                         WHERE meeting_id = %s AND doc_type = %s
                         """,
-                        (article[1], article[0]["meeting_id"], article[0]["doc_type"] )
+                        (article[1], article[3], article[0]["meeting_id"], article[0]["doc_type"])
                     )
+                print(f"Article saved: {article[0]['meeting_id']} {article[0]['doc_type']} {article[3]}")
                 logger.info(f"Article saved: {article[0]['meeting_id']} {article[0]['doc_type']}")
 
             conn.commit()

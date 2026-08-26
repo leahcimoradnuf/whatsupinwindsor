@@ -66,6 +66,7 @@ def fetch_documents(url, doc_type=None):
             document["text"] = None
             document["status"] = STATUS_FOLLOW_UP
             document["error"] = f"doc_type {key} not in materials"
+            document["doc_url"] = target_docs[key]
             documents.append(document)
             continue
 
@@ -78,6 +79,7 @@ def fetch_documents(url, doc_type=None):
             document["text"] = None
             document["status"] = STATUS_FOLLOW_UP
             document["error"] = f"No pdf returned for {key}; status: {response_pdf.status_code}"
+            document["doc_url"] = target_docs[key]
             documents.append(document)
             continue
 
@@ -86,6 +88,7 @@ def fetch_documents(url, doc_type=None):
         document["text"] = text
         document["status"] = STATUS_SOURCED
         document["error"] = None
+        document["doc_url"] = target_docs[key]
         documents.append(document)
 
     # Review document statuses and set assignment status before returning

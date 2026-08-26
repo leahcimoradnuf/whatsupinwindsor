@@ -105,3 +105,19 @@ def test_v06_reporter_records_civic_log(file_server, no_sleep_till_brooklyn):
     assert isinstance(result[1], datetime)
     assert result[2] == url
     assert result[3] == 200
+
+def test_v11_reporter_returns_the_right_assignment_status(file_server, no_sleep_till_brooklyn):
+    """fetch_documents() returns STATUS_PARTIAL for the assignment when it can't fetch a document"""
+    url = "http://localhost:8000/sample_materials_one_bad_link.html"
+    documents, status, error, available_docs = fetch_documents(url)
+
+    assert status == STATUS_PARTIAL
+
+def test_v11_reporter_returns_document_urls(file_server, no_sleep_till_brooklyn):
+    """document['doc_url'] is in the document dictionary returned by fetch_documents"""
+    url = "http://localhost:8000/sample_materials_one_bad_link.html"
+    documents, status, error, available_docs = fetch_documents(url)
+    
+    assert documents[0]["doc_url"] == "http://localhost:8000/sample_minutes.pdf"
+    assert documents[1]["doc_url"] == "http://localhost:8000/sample_minutes.pdf"
+    assert documents[2]["doc_url"] == "http://localhost:8000/nobody_home.pdf"
