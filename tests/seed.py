@@ -216,33 +216,26 @@ def seed_db(conn):
     
     # System prompt for minutes
     # TODO build out for other doc types when necessary
-    cur.execute(
-            """INSERT INTO system_prompts (doc_type, content)
-            VALUES (%s, %s)
-            ON CONFLICT (doc_type) DO UPDATE SET
-                content = EXCLUDED.content
-            """,
-            ("minutes", prompts["minutes"]["system"])
-        )
-    
-    for few_shot in prompts["minutes"]["examples"]:
-        doc_type = "minutes"
-        expected_output = {
-            "meeting_date": few_shot["meeting_date"],
-            "meeting_id": few_shot["meeting_id"],
-            "headline": few_shot["headline"],
-            "bullets": few_shot["bullets"],
-            "blurb": few_shot["blurb"]
-        }
+    for doc_type in ["minutes", "agenda"]:
         cur.execute(
-            """INSERT INTO few_shot_examples (meeting_id, doc_type, document_text, meeting_date, expected_output)
-            VALUES (%s, %s, %s, %s, %s)
-            ON CONFLICT (meeting_id) DO UPDATE SET
-                document_text = EXCLUDED.document_text,
-                expected_output = EXCLUDED.expected_output
-            """,
-            (few_shot["meeting_id"], doc_type, few_shot["minutes_text"], few_shot["meeting_date"], json.dumps(expected_output))
-        )
+                """INSERT INTO system_prompts (doc_type, content)
+                VALUES (%s, %s)
+                ON CONFLICT (doc_type) DO UPDATE SET
+                    content = EXCLUDED.content
+                """,
+                (doc_type, prompts[doc_type]["system"])
+            )
+    
+        for few_shot in prompts[doc_type]["examples"]:
+            cur.execute(
+                """INSERT INTO few_shot_examples (meeting_id, doc_type, document_text, meeting_date, expected_output)
+                VALUES (%s, %s, %s, %s, %s)
+                ON CONFLICT (meeting_id) DO UPDATE SET
+                    document_text = EXCLUDED.document_text,
+                    expected_output = EXCLUDED.expected_output
+                """,
+                (few_shot["meeting_id"], doc_type, few_shot["text"], few_shot["meeting_date"], json.dumps(few_shot["expected_output"]))
+            )
 
     conn.commit()
     cur.close()
