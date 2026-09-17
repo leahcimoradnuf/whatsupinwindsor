@@ -87,7 +87,7 @@ class AnthropicProvider:
         self.client = Anthropic(api_key=ANTHROPIC_API_KEY)
         self.model = "claude-sonnet-4-6"
 
-    def summarize(self, text, doc_type):
+    def summarize(self, text, doc_type, meeting_type="default"):
         """Constructs a prompt and summarizes assigned text.
 
         Args:
@@ -100,7 +100,7 @@ class AnthropicProvider:
         Returns:
             response (tup): (response_data, API Status, N_input_tokens, N_output_tokens)
         """
-        system_prompt, example_prompts = _build_prompts(doc_type)
+        system_prompt, example_prompts = _build_prompts(doc_type, meeting_type)
 
         # if doc_type not in system_prompt:
         #     raise ValueError(f"Unknown doc_type: {doc_type}")
