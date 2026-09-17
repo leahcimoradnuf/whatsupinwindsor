@@ -77,3 +77,15 @@ def test_v11_minutes_type_maps_to_default(meeting_type):
     # first execute() call is the system_prompts query
     args, _ = mock_cursor.execute.call_args_list[0]
     assert args[1] == ("minutes", "default")
+
+def test_v11_agenda_type_maps_to_special_meeting():
+    mock_cursor = MagicMock()
+    mock_cursor.fetchall.return_value = []
+    mock_conn = MagicMock()
+    mock_conn.cursor.return_value = mock_cursor
+    with patch("wuiw.journalist.get_db_connection", return_value=mock_conn):
+        _build_prompts("agenda", meeting_type="special_meeting")
+
+    # first execute() call is the system_prompts query
+    args, _ = mock_cursor.execute.call_args_list[0]
+    assert args[1] == ("agenda", "special_meeting")
