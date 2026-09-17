@@ -64,3 +64,16 @@ def test_v11_meetings_map_to_default(meeting_type):
     # first execute() call is the system_prompts query
     args, _ = mock_cursor.execute.call_args_list[0]
     assert args[1] == ("agenda", "default")
+
+@pytest.mark.parametrize("meeting_type", ["regular_meeting", "default", "special_meeting", "public_hearing"])
+def test_v11_minutes_type_maps_to_default(meeting_type):
+    mock_cursor = MagicMock()
+    mock_cursor.fetchall.return_value = []
+    mock_conn = MagicMock()
+    mock_conn.cursor.return_value = mock_cursor
+    with patch("wuiw.journalist.get_db_connection", return_value=mock_conn):
+        _build_prompts("minutes", meeting_type=meeting_type)
+
+    # first execute() call is the system_prompts query
+    args, _ = mock_cursor.execute.call_args_list[0]
+    assert args[1] == ("minutes", "default")

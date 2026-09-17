@@ -15,9 +15,12 @@ ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
 
 def _build_prompts(doc_type, meeting_type="default", body=None):
     # Query system prompts and few shots
-    meeting_types = {"default": "default", "regular_meeting": "default", "special_meeting": "special_meeting"} #TODO move this to config at some point
+    meeting_types = {
+        "agenda": {"default": "default", "regular_meeting": "default", "special_meeting": "special_meeting"},
+        "minutes": {"default": "default", "regular_meeting": "default"} #TODO move this to config at some point
+    }
     try:
-        _meeting_type = meeting_types[meeting_type]
+        _meeting_type = meeting_types[doc_type][meeting_type]
     except KeyError as e:
         logger.warning(f"Meeting type {meeting_type} has no prompts for document type {doc_type}, reverting to default {doc_type} prompts.")
         _meeting_type = "default"
