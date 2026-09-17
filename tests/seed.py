@@ -162,6 +162,7 @@ def create_tables(conn):
         """CREATE TABLE IF NOT EXISTS system_prompts (
         id SERIAL PRIMARY KEY,
         doc_type TEXT UNIQUE NOT NULL,
+        meeting_type TEXT NOT NULL,
         content TEXT NOT NULL
         );"""
         )
@@ -170,10 +171,11 @@ def create_tables(conn):
         id SERIAL PRIMARY KEY,
         meeting_id TEXT UNIQUE NOT NULL,
         doc_type TEXT NOT NULL,
+        meeting_type TEXT NOT NULL,
         document_text TEXT NOT NULL,
         meeting_date DATE,
         expected_output JSONB NOT NULL,
-        UNIQUE (meeting_id, doc_type));;"""
+        UNIQUE (meeting_id, doc_type));"""
         )
 
     conn.commit()
@@ -217,25 +219,26 @@ def seed_db(conn):
     # System prompt for minutes
     # TODO build out for other doc types when necessary
     for doc_type in ["minutes", "agenda"]:
-        cur.execute(
-                """INSERT INTO system_prompts (doc_type, content)
-                VALUES (%s, %s)
-                ON CONFLICT (doc_type) DO UPDATE SET
-                    content = EXCLUDED.content
-                """,
-                (doc_type, prompts[doc_type]["system"])
-            )
-    
-        for few_shot in prompts[doc_type]["examples"]:
+        for meeting_type in prompts[doc_type].keys():
             cur.execute(
-                """INSERT INTO few_shot_examples (meeting_id, doc_type, document_text, meeting_date, expected_output)
-                VALUES (%s, %s, %s, %s, %s)
-                ON CONFLICT (meeting_id) DO UPDATE SET
-                    document_text = EXCLUDED.document_text,
-                    expected_output = EXCLUDED.expected_output
-                """,
-                (few_shot["meeting_id"], doc_type, few_shot["text"], few_shot["meeting_date"], json.dumps(few_shot["expected_output"]))
-            )
+                    """INSERT INTO system_prompts (doc_type, meeting_type, content)
+                    VALUES (%s, %s, %s)
+                    ON CONFLICT (doc_type) DO UPDATE SET
+                        content = EXCLUDED.content
+                    """,
+                    (doc_type, meeting_type, prompts[doc_type][meeting_type]["system"])
+                )
+    
+            for few_shot in prompts[doc_type][meeting_type]["examples"]:
+                cur.execute(
+                    """INSERT INTO few_shot_examples (meeting_id, doc_type, meeting_type, document_text, meeting_date, expected_output)
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                    ON CONFLICT (meeting_id) DO UPDATE SET
+                        document_text = EXCLUDED.document_text,
+                        expected_output = EXCLUDED.expected_output
+                    """,
+                    (few_shot["meeting_id"], doc_type, meeting_type, few_shot["text"], few_shot["meeting_date"], json.dumps(few_shot["expected_output"]))
+                )
 
     conn.commit()
     cur.close()
