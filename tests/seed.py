@@ -237,7 +237,7 @@ def seed_db(conn):
                         document_text = EXCLUDED.document_text,
                         expected_output = EXCLUDED.expected_output
                     """,
-                    (few_shot["meeting_id"], doc_type, meeting_type, few_shot["text"], few_shot["meeting_date"], json.dumps(few_shot["expected_output"]))
+                    (few_shot["meeting_id"], doc_type, meeting_type, few_shot["text"], few_shot["expected_output"]["meeting_date"], json.dumps(few_shot["expected_output"]))
                 )
 
     conn.commit()
