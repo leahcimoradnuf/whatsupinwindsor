@@ -1,0 +1,21 @@
+name: Deploy Docs
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: pip install mkdocs mkdocs-material mkdocstrings mkdocstrings-python mkdocs-autorefs mkdocs-get-deps 
+      - name: Deploy
+        run: mkdocs gh-deploy --force
