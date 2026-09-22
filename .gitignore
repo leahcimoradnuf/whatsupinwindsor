@@ -19,3 +19,4 @@ prompts.json
 *.sql
 update_sql.sh
 scrub_repo.sh
+inspect_requests.py
