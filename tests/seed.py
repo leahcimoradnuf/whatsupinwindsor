@@ -5,7 +5,7 @@ from wuiw.config import STATUS_DONE, STATUS_PENDING
 
 # data
 
-PROMPTS = "/home/mike/myprojects/whatsupinwindsor/wuiw/prompts.json"
+PROMPTS = "/home/mike/myprojects/whatsupinwindsor/wuiw/old_prompts.json"
 
 class SeedData:
     def __init__(self):
@@ -227,13 +227,7 @@ def seed_db(conn):
     
     for few_shot in prompts["minutes"]["examples"]:
         doc_type = "minutes"
-        expected_output = {
-            "meeting_date": few_shot["meeting_date"],
-            "meeting_id": few_shot["meeting_id"],
-            "headline": few_shot["headline"],
-            "bullets": few_shot["bullets"],
-            "blurb": few_shot["blurb"]
-        }
+        expected_output = few_shot["expected_output"]
         cur.execute(
             """INSERT INTO few_shot_examples (meeting_id, doc_type, document_text, meeting_date, expected_output)
             VALUES (%s, %s, %s, %s, %s)
@@ -241,7 +235,7 @@ def seed_db(conn):
                 document_text = EXCLUDED.document_text,
                 expected_output = EXCLUDED.expected_output
             """,
-            (few_shot["meeting_id"], doc_type, few_shot["minutes_text"], few_shot["meeting_date"], json.dumps(expected_output))
+            (few_shot["meeting_id"], doc_type, few_shot["text"], few_shot["meeting_date"], json.dumps(expected_output))
         )
 
     conn.commit()

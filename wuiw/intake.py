@@ -5,7 +5,7 @@ import datetime
 import requests
 import time
 from wuiw.config import USER_AGENT, HEADERS, MUNICIPAL_BODIES, MEETING_TYPES, REQUEST_DELAY
-from wuiw.util import classify
+from wuiw.util import classify, get_egress_ip
 from bs4 import BeautifulSoup
 from wuiw.log import civic_log
 # from datetime import datetime
@@ -30,7 +30,8 @@ def get_rss(rss_url):
                 "materials": url
                 }
     """
-   
+    egress_ip = get_egress_ip()
+    logger.info(f"Egress IP for this request: {egress_ip}")
     feed = feedparser.parse(rss_url, agent=USER_AGENT, modified=None)
     civic_log.record(datetime.datetime.now(), rss_url, feed.status)
 

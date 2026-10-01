@@ -1,4 +1,5 @@
 import logging
+import requests
 from rapidfuzz import process
 from wuiw.config import CLASSIFICATIONS # TODO build alias map in config.py
 
@@ -48,3 +49,9 @@ def classify(title, town_id=None, class_type=None, threshold=80, fallback=True):
 
     logger.warning("Could not classify from title: %s", title)
     return "unclassified"
+
+def get_egress_ip():
+    try:
+        return requests.get("https://api.ipify.org", timeout=5).text
+    except Exception:
+        return None
