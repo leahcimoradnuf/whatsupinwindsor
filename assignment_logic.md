@@ -75,6 +75,11 @@ return {
 ```
 Which can stay the same, the only thing that needs to change is the status taxonomy.
 
+### State Definition: provider.summarize()
+Status|Description
+------|-----------
+OK|AI API call returned a healthy response
+
 ## Assignment Level
 These statuses represent the current logic at all levels and need to be confined to the assignment level.
 
