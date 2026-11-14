@@ -137,13 +137,26 @@ class AnthropicProvider:
                 messages=prompt
                 )
     
-            response_data =  json.loads(response.content[0].text)
-            input_tokens = response.usage.input_tokens
-            output_tokens = response.usage.output_tokens
+            logger.info(
+                "summarize doc_type=%s stop_reason=%s blocks=%d in_tokens=%d out_tokens=%d",
+                doc_type,
+                response.stop_reason,
+                len(response.content),
+                response.usage.input_tokens,
+                response.usage.output_tokens,
+            )           
 
+            if not response.content:
+                # dump the raw response so you can see exactly what came back
+                logger.error("empty content, raw=%s", response.model_dump_json()[:2000])
+                return (None, "FAIL", response.usage.prompt_tokens, response.usage.completion_tokens)
+
+            response_data = json.loads(response.choices[0].message.content)
+            input_tokens = response.usage.prompt_tokens
+            output_tokens = response.usage.completion_tokens
             return (response_data, "OK", input_tokens, output_tokens)
         except Exception as e:
-            logger.warning(f"AI client failed: {e}")
+            logger.exception("AI client failed.")
             return (None, "FAIL", None, None)
     
 
